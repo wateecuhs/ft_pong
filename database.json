@@ -1,0 +1,26 @@
+[
+	{
+		"invites": [
+			{
+				"from": "panger",
+				"time": "2024-03-01 16:05:09"
+			}
+		],
+		"login": "hgeffroy",
+		"stats": {
+			"elo": 800
+		}
+	},
+	{
+		"invites": [
+			{
+				"from": "hgeffroy",
+				"time": "2024-03-01 15:31:37"
+			}
+		],
+		"login": "panger",
+		"stats": {
+			"elo": 600
+		}
+	}
+]

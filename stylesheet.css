@@ -1,0 +1,233 @@
+html {
+	width: 100%;
+	height: 100%;
+}
+
+body {
+	font-family: Arial, sans-serif;
+	font-size: large;
+	background-color: #242331;
+	margin: 0;
+	padding: 0;
+}
+a{
+	text-decoration: none;
+	color: #ffffff;
+}
+.menu{
+	background-color: #343348;
+	width: 100%;
+	height: 60px;
+	z-index: 100;
+	justify-content: center;
+	top: 0;
+	left: 0;
+	box-shadow: 0 2px 5px 0 rgba(135, 131, 131, 0.26);
+	display:grid;
+	grid-template-columns: auto auto auto auto;
+}
+.menu-item {
+	width: 4%;
+	display: flex;
+	top: 15px;
+	right: 30px;
+	padding: 5px;
+	position: relative;
+}
+#match-container {
+	top: 20%;
+	left: 4%;
+	width: 35%;
+	height: 60%;
+	position: absolute;
+	display: flex;
+	flex-direction: column;
+	box-shadow: 0 0 50px 15px #535353;
+	border-radius: 5px;
+	background-color: #acabb9;
+}
+#stats-container {
+	top: 15%;
+	right: 5%;
+	width: 40%;
+	height: 80%;
+	position: absolute;
+	display: flex;
+	flex-direction: column;
+	box-shadow: 0 0 50px 15px #535353;
+	border-radius: 5px;
+	background-color: #acabb9;
+}
+.input {
+	left: 5%;
+	top: 18%;
+	width: 88%;
+	height: 8%;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	border-radius: 5px;
+	position: relative;
+	justify-content: center;
+	align-items: center;
+}
+#copyRoomCode {
+	font-size: 0;
+    width: 0;
+    opacity: 0;
+	right: 5%;
+	top: 25%;
+	height: 13%;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	border-radius: 5px;
+	position: absolute;
+	justify-content: center;
+	align-items: center;
+    transition: all 0.5s ease;
+}
+#copyRoomCode.created {
+	font-size: medium;
+	width: 42%;
+	opacity: 1;
+}
+#copyRoomCode2 {
+	font-size: 0;
+    width: 0;
+    opacity: 0;
+	left: 5%;
+	top: 25%;
+	height: 13%;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	border-radius: 5px;
+	position: absolute;
+	justify-content: center;
+	align-items: center;
+    transition: all 0.5s ease;
+}
+#copyRoomCode2.created {
+	font-size: medium;
+	width: 42%;
+	opacity: 1;
+}
+#roomcode {
+	left: 31%;
+	top: 25%;
+	width: 37%;
+	height: 10%;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	border-radius: 5px;
+	position: absolute;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+	font-size:larger;
+    transition: all 0.5s ease;
+	color: #494860;
+}
+#roomcode.created {
+	left: 5%;
+	width: 45%;
+}
+#roomcode.created_right {
+	left: 49%;
+	width: 45%;
+}
+#createRoom.shrinked {
+	font-size: 0;
+    width: 0;
+    opacity: 0;
+}
+.button {
+	color: #343348;
+}
+#createRoom {
+	font-size: medium;
+	left: 5%;
+	top: 25%;
+	width: 25%;
+	height: 13%;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	border-radius: 5px;
+	position: absolute;
+	border-radius: 5px;
+	cursor: pointer;
+    transition: all 0.5s ease;
+}
+#joinRoom {
+	font-size: medium;
+	left: 71%;
+	top: 25%;
+	width: 25%;
+	height: 13%;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	border-radius: 5px;
+	position: absolute;
+	border-radius: 5px;
+	cursor: pointer;
+    transition: all 0.5s ease;
+}
+#joinRoom.shrinked {
+	font-size: 0;
+    width: 0;
+    opacity: 0;
+}
+.player_names {
+	left: 7%;
+	top: 45%;
+	width: 90%;
+	position: relative;
+	font-size: large;
+	color: #343348;
+}
+#login {
+	right: 5%;
+	top: 10%;
+	width: 100%;
+	height: 50%;
+	position: relative;
+	border-radius: 5px;
+}
+#start {
+	left: 5%;
+	bottom: 5%;
+	width: 90%;
+	height: auto;
+	position: absolute;
+	border-radius: 5px;
+}
+.text {
+	color: #343348;
+}
+#stats-h1 {
+	left: 50%;
+	transform: translate(-50%, 0);
+	position: absolute;
+}
+#stats-h3 {
+	left: 10%;
+	top: 20%;
+	transform: translate(-50%, 0);
+	position: absolute;
+}
+#elo {
+	left: 18%;
+	top: 20%;
+	transform: translate(-50%, 0);
+	position: absolute;
+}

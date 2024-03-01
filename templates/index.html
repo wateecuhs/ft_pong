@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script src="https://cdn.jsdelivr.net/npm/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+	<link rel="stylesheet" href="stylesheet.css">
+	<title>ft_pong</title>
+</head>
+<body>
+	<div class="menu">
+		<input id="player1" class="input" type="text" placeholder="NAME">
+		<button id="login" class="button">LOGIN</button>
+		<!-- <div class="menu-item">
+			<a href="index.html">LOGIN</a>
+		</div>	 -->
+	</div>
+	<div id="canva" class="canva">
+		<div id="match-container">
+			<h1 id="stats-h1" class="text">ROOM</h1>
+			<input id="roomcode" class="room-input" type="text" placeholder="ROOM CODE">
+			<button id="createRoom" class="button" onclick="createRoom()">CREATE ROOM</button>
+			<button id="copyRoomCode" class="button" onclick="copyRoomCode()">COPY CODE</button>
+			<button id="copyRoomCode2" class="button" onclick="copyRoomCode()">COPY CODE</button>
+			<button id="joinRoom" class="button" onclick="joinRoom()">JOIN ROOM</button>
+			<p id="player1_name" class="player_names"></p>
+			<p id="player2_name" class="player_names"></p>
+			<button id="start" class="button">START MATCH</button>
+		</div>
+		<div id="stats-container">
+			<h1 id="stats-h1" class="text">STATS</h1>
+			<h3 id="stats-h3" class="text">ELO :</h3>
+			<h3 id="elo" class="text"></h3>
+		</div>
+	</div>
+	<script src="js/index.js"></script>
+</body>
+</html>
