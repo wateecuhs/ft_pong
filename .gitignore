@@ -1,2 +1,3 @@
 __pycache__
 API_DONT_PUSH.json
+.env/*
