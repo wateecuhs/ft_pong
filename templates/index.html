@@ -10,11 +10,11 @@
 </head>
 <body>
 	<div class="menu">
-		<input id="player1" class="input" type="text" placeholder="NAME">
-		<button id="login" class="button">LOGIN</button>
-		<!-- <div class="menu-item">
-			<a href="index.html">LOGIN</a>
-		</div>	 -->
+		<div class="menu-item" id="menu-item-container">
+			<input id="player1" class="input" type="text" placeholder="NAME">
+			<button id="login" class="button">LOGIN</button>
+			<!-- <a id="login" href="https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-980c828f0609cae0f6762042edb5fa99953c2c0d899e807c79bca9e17c8db2bf&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000%2F&response_type=code">LOGIN</a> -->
+		</div>
 	</div>
 	<div id="canva" class="canva">
 		<div id="match-container">
@@ -24,9 +24,10 @@
 			<button id="copyRoomCode" class="button" onclick="copyRoomCode()">COPY CODE</button>
 			<button id="copyRoomCode2" class="button" onclick="copyRoomCode()">COPY CODE</button>
 			<button id="joinRoom" class="button" onclick="joinRoom()">JOIN ROOM</button>
+			<p id="room_errors" class="text"></p>
 			<p id="player1_name" class="player_names"></p>
 			<p id="player2_name" class="player_names"></p>
-			<button id="start" class="button">START MATCH</button>
+			<button id="start" class="button" onclick="startGame()">START MATCH</button>
 		</div>
 		<div id="stats-container">
 			<h1 id="stats-h1" class="text">STATS</h1>

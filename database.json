@@ -1,26 +1,20 @@
 [
 	{
-		"invites": [
-			{
-				"from": "panger",
-				"time": "2024-03-01 16:05:09"
-			}
-		],
-		"login": "hgeffroy",
+		"login": "panger",
 		"stats": {
-			"elo": 800
+			"elo": 500
 		}
 	},
 	{
-		"invites": [
-			{
-				"from": "hgeffroy",
-				"time": "2024-03-01 15:31:37"
-			}
-		],
-		"login": "panger",
+		"login": "test",
 		"stats": {
-			"elo": 600
+			"elo": 500
+		}
+	},
+	{
+		"login": "",
+		"stats": {
+			"elo": 500
 		}
 	}
 ]
