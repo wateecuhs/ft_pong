@@ -10,6 +10,46 @@ app = Flask(__name__)
 def id_generator():
 	return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
 
+def updateElo(winner, loser):
+	R1 = winner['elo']
+	R2 = loser['elo']
+	if (winner['wins'] + winner['losses']) > 10:
+		k1 = 16
+	else:
+		k1 = 32
+	if (loser['wins'] + loser['losses']) > 10:
+		k2 = 16
+	else:
+		k2 = 32
+	E1 = 1 / (1 + 10 ** ((R2 - R1) / 400))
+	E2 = 1 / (1 + 10 ** ((R1 - R2) / 400))
+	R1 = R1 + k1 * (1 - E1)
+	R2 = R2 + k2 * (0 - E2)
+	return (R1, R2)
+
+@app.route("/declare_winner", methods=['POST'])
+def declare_winner():
+	winner = request.args['winner']
+	loser = request.args['loser']
+	roomCode = request.args['roomCode']
+	with open('rooms.json', 'r') as file:
+		rooms = json.load(file)
+	for room in rooms:
+		if room['roomCode'] == roomCode:
+			room['status'] = "Finished"
+			with open('database.json', 'r') as file:
+				data = json.load(file)
+			for player in data:
+				if player['login'] == winner:
+					stats_winner = player['stats']
+				if player['login'] == loser:
+					stats_loser = player['stats']
+			stats_winner['elo'], stats_loser['elo'] = updateElo(stats_winner['elo'], stats_loser['elo'])
+			with open('rooms.json', 'w') as file:
+				json.dump(rooms, file, sort_keys=True, indent='\t', separators=(',', ': '))
+			return jsonify({"message" : f"Winner declared in room {roomCode}"}), 200
+	return jsonify({"message" : "Couldn't declare winner"}), 404
+
 @app.route("/start_game", methods=['POST'])
 def start_game():
 	roomCode = request.args['roomCode']
@@ -147,5 +187,4 @@ def serve_file(filename):
 	return send_from_directory('.', filename)
 
 if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 5000))
-    app.run(debug=True, host='0.0.0.0', port=port)
+	app.run(host='0.0.0.0')

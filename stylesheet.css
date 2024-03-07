@@ -267,6 +267,15 @@ textarea:focus, input:focus{
 	font-size: large;
 	color: #343348;
 }
+.player_wins {
+	left: 70%;
+	top: 45%;
+	width: 20%;
+	margin: 5px;
+	position: relative;
+	font-size: medium;
+	color: #343348;
+}
 #start {
 	left: 5%;
 	bottom: 5%;
@@ -314,6 +323,93 @@ textarea:focus, input:focus{
 	height: 64px;
 	position: absolute;
 	border-radius: 32px;
+    text-align: center;
 	object-fit: cover;
 	transform: translateY(-50%);
 }
+#ongoing-match {
+	left: 50%;
+	width: 100%;
+    text-align: center;
+	transform: translateX(-50%);
+	position: relative;
+}
+.winner-box {
+	display: flex;
+	align-items: center;
+	justify-content: center;  
+	grid-gap: 23px;
+	margin-top: 20px;
+	height: 100%;
+}
+
+/* Button used to open the contact form - fixed at the bottom of the page */
+.open-button {
+  background-color: #555;
+  color: white;
+  padding: 16px 20px;
+  border: none;
+  cursor: pointer;
+  opacity: 0.8;
+  position: absolute;
+  left: 5%;
+  bottom: 4%;
+  width: 90%;
+}
+
+/* The popup form - hidden by default */
+.form-popup {
+  display: none;
+  position: absolute;
+  left: 5%;
+  bottom: 4%;
+  height: 92%;
+  width: 90%;
+  color: white;
+  border: 3px solid #f1f1f1;
+  background-color: #555;
+}
+
+/* Add styles to the form container */
+.form-container {
+  padding: 10px;
+  height: 100%;
+}
+
+/* Full-width input fields */
+.form-container input[type=text], .form-container input[type=password] {
+  height: 90%;
+  padding: 15px;
+  left: 5%;
+  margin: 5% 0 5% 0;
+  border: none;
+  background: #f1f1f1;
+}
+
+/* When the inputs get focus, do something */
+.form-container input[type=text]:focus, .form-container input[type=password]:focus {
+  background-color: #ddd;
+  outline: none;
+}
+
+/* Set a style for the submit/login button */
+.form-container .btn {
+  background-color: #0075C4;
+  color: white;
+  padding: 16px 20px;
+  border: none;
+  cursor: pointer;
+  width: 40%;
+  margin-bottom:10px;
+  opacity: 0.8;
+}
+
+/* Add a red background color to the cancel button */
+.form-container .player2 {
+	background-color: #EFA00B;
+}
+
+/* Add some hover effects to buttons */
+.form-container .btn:hover, .open-button:hover {
+  opacity: 1;
+} 

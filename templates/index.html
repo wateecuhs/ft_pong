@@ -31,7 +31,19 @@
 			<p id="room_errors" class="text"></p>
 			<p id="player1_name" class="player_names"></p>
 			<p id="player2_name" class="player_names"></p>
-			<button id="start" class="button" onclick="startGame()">START MATCH</button>
+			<button id="open-button" class="open-button" onclick="openForm()">START MATCH</button>
+			<!-- The form -->
+			<div class="form-popup" id="myForm">
+			<form class="form-container">
+				<h1 id="ongoing-match">ONGOING MATCH</h1>
+				<h3 id="ongoing-match"><b>WHO WON ?</b></label>
+				<div class="winner-box">
+					<button type="submit" class="btn">PLAYER 1</button>
+					<button type="button" class="btn player2">PLAYER 2</button>
+				</div>
+			</form>
+			</div>
+			<!-- <button id="start" class="button" onclick="startGame()">START MATCH</button> -->
 		</div>
 		<div id="stats-container">
 			<h1 id="stats-h1" class="text">STATS</h1>

@@ -3,6 +3,18 @@ var roomCode = undefined;
 var animateDotsBool = false;
 const roomError = document.getElementById('room_errors');
 
+function openForm() {
+	document.getElementById("myForm").style.display = "block";
+	document.getElementById("open-button").addEventListener('click', closeForm);
+	document.getElementById("open-button").removeEventListener('click', openForm);
+  }
+  
+function closeForm() {
+	document.getElementById("myForm").style.display = "none";
+	document.getElementById("open-button").addEventListener('click', openForm);
+	document.getElementById("open-button").removeEventListener('click', closeForm);
+}
+
 function	tempLogin(){
 	userId = document.getElementById('player1').value;
 	fetch(`/get_stats?player=${userId}`, {
@@ -34,22 +46,6 @@ function animateDots() {
 			player2.textContent = 'Player 2: Waiting for someone to join' + dots;
 		}
 	}, 300);
-}
-
-function	login(){
-	fetch(`https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-980c828f0609cae0f6762042edb5fa99953c2c0d899e807c79bca9e17c8db2bf&redirect_uri=http%3A%2F%2Fwateecuhs.pythonanywhere.com%2F&response_type=code`, {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json'
-	}})
-	.then(response => {
-		if (!response.ok) {
-			throw new Error('Error logging in');
-		}
-		return response.json();
-	}).then(data => {
-		console.log(data);
-	})
 }
 
 function	fade_button(){
@@ -208,12 +204,35 @@ function	createRoom(){
 	});	
 }
 
+function	declareWinner(){
+	fetch(`/declare_winner?roomCode=${roomCode}?winner=${winner}?loser=${loser}`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({userId})
+	})
+	.then(response => {
+		if (!response.ok) {
+			throw new Error('Error declaring winner');
+		}
+		return response.json();
+	})
+	.then(data => {
+		console.log(data);
+
+	})
+	.catch(error => {
+		console.error(error);
+	});	
+
+}
+
 function	startGame(){
 	if (userId === undefined){
 		roomError.innerHTML = 'Please log in first';
 		return;
 	}
-	console.log(roomCode);
 	if (roomCode === undefined){
 		roomError.innerHTML = 'Please create or join a room first';
 		return;
@@ -232,8 +251,9 @@ function	startGame(){
 		return response.json();
 	})
 	.then(data => {
-		console.log(data);
-
+		document.getElementById('start').innerHTML = 'Game started';
+		document.getElementById('start').disabled = 'true';
+		roomError.innerHTML = '';
 	})
 	.catch(error => {
 		console.error(error);
