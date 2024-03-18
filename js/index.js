@@ -1,11 +1,58 @@
+var socket = io();
+		socket.on('connect', function() {
+		socket.emit('join', {
+			"username": 'panger',
+			"room": 'QWEASD'
+		});
+});
 var userId = undefined;
 var roomCode = undefined;
 var animateDotsBool = false;
 const roomError = document.getElementById('room_errors');
+var playerwait = undefined;
+
+async function	get_room(roomCode){
+	return fetch(`/get_room?roomCode=${roomCode}`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({userId})
+		})
+	.then(response => {
+		if (!response.ok) {
+			throw new Error('Error getting room');
+		}
+		return response.json();
+	})
+	.then(data => {
+		console.log(data);
+		console.log('RETURNING THIS SHIT\n');
+		return (data);
+	})
+	.catch(error => {
+		console.error(error);
+	});	
+}
+
+function	get_stats(userId){
+	fetch(`/get_stats?login=${userId}`)
+	.then(response => {
+		if (!response.ok) {
+			throw new Error('Error getting stats');
+		}
+		return response.json();
+	})
+	.then(data => {
+		return (data);
+	})
+	.catch(error => {
+		console.error(error);
+	});	
+}
 
 function openForm() {
 	document.getElementById("myForm").style.display = "block";
-	document.getElementById("open-button").addEventListener('click', closeForm);
 	document.getElementById("open-button").removeEventListener('click', openForm);
   }
   
@@ -13,20 +60,6 @@ function closeForm() {
 	document.getElementById("myForm").style.display = "none";
 	document.getElementById("open-button").addEventListener('click', openForm);
 	document.getElementById("open-button").removeEventListener('click', closeForm);
-}
-
-function	tempLogin(){
-	userId = document.getElementById('player1').value;
-	fetch(`/get_stats?player=${userId}`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify({userId})
-	}).then(response => response.json())
-	.then(data => {
-		document.getElementById('elo').innerHTML = data;
-	})
 }
 
 function animateDots() {
@@ -46,6 +79,23 @@ function animateDots() {
 			player2.textContent = 'Player 2: Waiting for someone to join' + dots;
 		}
 	}, 300);
+}
+
+function	resetMatch(){
+	document.getElementById('createRoom').classList.remove('shrinked');
+	document.getElementById('createRoom').classList.remove('shrinked2');
+	document.getElementById('joinRoom').classList.remove('shrinked');
+	document.getElementById('joinRoom').classList.remove('shrinked2');
+	document.getElementById('roomcode').classList.remove('created');
+	document.getElementById('roomcode').classList.remove('created_right');
+	document.getElementById('roomcode').disabled = false;
+	document.getElementById('roomcode').value = '';
+	document.getElementById('copyRoomCode').classList.remove('created');
+	document.getElementById('copyRoomCode2').classList.remove('created');
+	document.getElementById('player1_name').textContent = '';
+	document.getElementById('player2_name').textContent = '';
+	document.getElementById('open-button').disabled = true;
+	animateDotsBool = false;
 }
 
 function	fade_button(){
@@ -100,8 +150,13 @@ function	waitingForPlayer(){
 					body: JSON.stringify(data['player'])
 				})
 				.then(response => response.json())
-				.then(elo => {
-					document.getElementById('player2_name').textContent = 'Player 2: ' + data['player'] + ' (' + elo + ')';
+				.then(stats => {
+					document.getElementById('player2_name').textContent = 'Player 2: ' + data['player'] + ' (' + stats['elo'] + ')';
+					document.getElementById('open-button').disabled = false;
+					document.getElementById('player1-win').addEventListener('click', player1Win);
+					document.getElementById('player1-win').addEventListener('click', closeForm);
+					document.getElementById('player2-win').addEventListener('click', player2Win);
+					document.getElementById('player2-win').addEventListener('click', closeForm);
 				})
 				clearTimeout(test);
 			}
@@ -109,7 +164,14 @@ function	waitingForPlayer(){
 		.catch(error => {
 			console.log(error);
 		});
-		var test = setTimeout(waitingForPlayer, 1000);
+		playerwait = setTimeout(waitingForPlayer, 1000);
+}
+
+function	leaveRoom(){
+	resetMatch();
+	document.getElementById('leave-button').style.display = 'none';
+
+	clearTimeout(playerwait);
 }
 
 function	joinRoom(){
@@ -147,14 +209,14 @@ function	joinRoom(){
 			body: JSON.stringify(data['player'])
 		})
 		.then(response => response.json())
-		.then(elo => {
-			console.log(elo);
-			player1.textContent = 'Player 1: ' + data['player1'] + ' (' + elo + ')';
+		.then(stats => {
+			player1.textContent = 'Player 1: ' + data['player1'] + ' (' + stats['elo'] + ')';
 		})
-		if (data['player1'] === userId){
-			animateDotsBool = true;
-			animateDots();
-			waitingForPlayer();
+			document.getElementById('leave-button').style.display = 'unset';
+			if (data['player1'] === userId){
+				animateDotsBool = true;
+				animateDots();
+				waitingForPlayer();
 		}
 		else{
 			player2.textContent = 'Player 2: You (' + player2Elo + ')';
@@ -204,29 +266,70 @@ function	createRoom(){
 	});	
 }
 
-function	declareWinner(){
-	fetch(`/declare_winner?roomCode=${roomCode}?winner=${winner}?loser=${loser}`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify({userId})
-	})
-	.then(response => {
-		if (!response.ok) {
-			throw new Error('Error declaring winner');
-		}
-		return response.json();
-	})
-	.then(data => {
-		console.log(data);
-
+function	player1Win(){
+	get_room(roomCode)
+	.then(room => {
+		console.log('ROOM');
+		console.log(room);
+		fetch(`/declare_winner?roomCode=${roomCode}&winner=${room['player1']}&loser=${room['player2']}`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({userId})
+		})
+		.then(response => {
+			if (!response.ok) {
+				throw new Error('Error declaring winner');
+			}
+			return response.json();
+		})
+		.then(data => {
+			console.log(data);
+			resetMatch();
+			updateElo(userId);
+	
+		})
+		.catch(error => {
+			console.error(error);
+		});	
 	})
 	.catch(error => {
 		console.error(error);
-	});	
+	});
+};
 
-}
+function	player2Win(){
+	get_room(roomCode)
+	.then(room => {
+		console.log('ROOM');
+		console.log(room);
+		fetch(`/declare_winner?roomCode=${roomCode}&winner=${room['player2']}&loser=${room['player1']}`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({userId})
+		})
+		.then(response => {
+			if (!response.ok) {
+				throw new Error('Error declaring winner');
+			}
+			return response.json();
+		})
+		.then(data => {
+			console.log(data);
+			updateElo(userId);
+			resetMatch();
+		})
+		.catch(error => {
+			console.error(error);
+		});	
+	})
+	.catch(error => {
+		console.error(error);
+	});
+};
 
 function	startGame(){
 	if (userId === undefined){
@@ -260,59 +363,52 @@ function	startGame(){
 	});	
 }
 
-function getCodeFromUrl() {
-	const queryParams = new URLSearchParams(window.location.search);
-	const code = queryParams.get('code');
-	return code;
-}
-
-function	loginAuth(code){
-	fetch(`/auth/42/callback?code=${code}`, {
+function	updateElo(userId) {
+	fetch(`/get_stats?player=${userId}`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
 		},
-		body: JSON.stringify({code})
-	}).then(response => {
-		if (!response.ok) {
-			throw new Error('Error logging in');
-		}
-		return response.json();
-	}).then(data => {
-		console.log(data);
-		userId = data['userId'];
-		document.getElementById('login').disabled = true;
-		document.getElementById('login').textContent = userId;
-		let img = document.createElement('img');
-		img.src = data['image'];
-		console.log(img.src);
-		img.alt = 'profile picture';
-		img.id = 'profile_pic';
-		img.classList.add('profile_pic');
-		document.getElementById('menu-item-container').appendChild(img);
-		fetch(`/get_stats?player=${userId}`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({userId})
-		})
+		body: JSON.stringify(userId)
+	})
+	.then(response => response.json())
+	.then(stats => {
+		document.getElementById('elo').innerHTML = stats['elo'];
+	})
+}
+
+function	getUserInfo() {
+	fetch(`/get_user_info`)
 		.then(response => response.json())
-		.then(data => {
-			document.getElementById('elo').innerHTML = data;
-			roomError.innerHTML = '';
+		.then(data =>{
+			console.log(data);
+			userId = data['userId'];
+			document.getElementById('user-id').innerHTML = userId;
+			let img = document.createElement('img');
+			img.src = data['image'];
+			console.log(img.src);
+			img.alt = 'profile picture';
+			img.id = 'profile_pic';
+			img.classList.add('profile_pic');
+			document.getElementById('menu-item-container').appendChild(img);
+			fetch(`/get_stats?player=${userId}`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({userId})
+			})
+			.then(response => response.json())
+			.then(data => {
+				document.getElementById('elo').innerHTML = data['elo'];
+				roomError.innerHTML = '';
+			})
 		})
-	});
 }
 
 window.onload = function(){
+	getUserInfo();
 	document.getElementById('roomcode').value = null;
 	document.getElementById('roomcode').placeholder = 'ROOM CODE';
-	document.getElementById('login').addEventListener('click', tempLogin);
-	const code = getCodeFromUrl();
-	console.log(code);
-	if (code !== null) {
-		loginAuth(code);
-	}
-	
+	socket.emit()
 }

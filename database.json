@@ -10,5 +10,11 @@
 		"stats": {
 			"elo": 500
 		}
+	},
+	{
+		"login": "quteriss",
+		"stats": {
+			"elo": 500
+		}
 	}
 ]

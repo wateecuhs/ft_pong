@@ -1,163 +1,127 @@
-from flask import Flask, render_template, send_from_directory, request, jsonify, Response, redirect,send_file
+from flask import Flask, render_template, send_from_directory, request, jsonify, Response, redirect,send_file, session
 import json
 import string
 import random
-import os
 import requests
-import datetime
+from flask_socketio import SocketIO, send, emit, join_room, leave_room
+from db import UserDB
 
 app = Flask(__name__)
+
+with open('API_DONT_PUSH.json', 'r') as file:
+	api = json.load(file)
+app.secret_key = api[0]['flask_secret']
+client = UserDB(api[0]['connection_string'])
+socketio = SocketIO(app)
+
+@socketio.on('join')
+def on_join(data):
+	print(data)
+	username = data['username']
+	room = data['room']
+	join_room(room)
+	send(username + ' has entered the room.', to=room)
+
+@socketio.on('leave')
+def on_leave(data):
+	username = data['username']
+	room = data['room']
+	leave_room(room)
+	send(username + ' has left the room.', to=room)
+
+@app.route("/get_room", methods=['POST'])
+def	get_room():
+	roomCode = request.args['roomCode']
+	room = client.get_room(room_code=roomCode)
+	if room:
+		return jsonify(room), 200
+	return jsonify({"message" : "Room not found"}), 404
+
+@app.route("/get_stats", methods=['POST'])
+def get_stats():
+	login = request.args['player']
+	data = client.get_user(login)
+	if data:
+		return jsonify(data['stats']), 200
+	return jsonify({"message" : "player not found"}), 404
+
 def id_generator():
 	return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
 
 def updateElo(winner, loser):
-	R1 = winner['elo']
-	R2 = loser['elo']
-	if (winner['wins'] + winner['losses']) > 10:
-		k1 = 16
-	else:
-		k1 = 32
-	if (loser['wins'] + loser['losses']) > 10:
-		k2 = 16
-	else:
-		k2 = 32
+	k = 32
+	R1 = winner
+	R2 = loser
 	E1 = 1 / (1 + 10 ** ((R2 - R1) / 400))
 	E2 = 1 / (1 + 10 ** ((R1 - R2) / 400))
-	R1 = R1 + k1 * (1 - E1)
-	R2 = R2 + k2 * (0 - E2)
-	return (R1, R2)
+	R1 = R1 + k * (1 - E1)
+	R2 = R2 + k * (0 - E2)
+	return (int(R1), int(R2))
 
 @app.route("/declare_winner", methods=['POST'])
 def declare_winner():
 	winner = request.args['winner']
 	loser = request.args['loser']
 	roomCode = request.args['roomCode']
-	with open('rooms.json', 'r') as file:
-		rooms = json.load(file)
-	for room in rooms:
-		if room['roomCode'] == roomCode:
-			room['status'] = "Finished"
-			with open('database.json', 'r') as file:
-				data = json.load(file)
-			for player in data:
-				if player['login'] == winner:
-					stats_winner = player['stats']
-				if player['login'] == loser:
-					stats_loser = player['stats']
-			stats_winner['elo'], stats_loser['elo'] = updateElo(stats_winner['elo'], stats_loser['elo'])
-			with open('rooms.json', 'w') as file:
-				json.dump(rooms, file, sort_keys=True, indent='\t', separators=(',', ': '))
-			return jsonify({"message" : f"Winner declared in room {roomCode}"}), 200
-	return jsonify({"message" : "Couldn't declare winner"}), 404
+	room = client.get_room(roomCode)
+	winner_data = client.get_user(winner)
+	loser_data = client.get_user(loser)
+	if room is None or winner_data is None or loser_data is None:
+		return "error", 404
+	winner_data['stats']['elo'], loser_data['stats']['elo'] = updateElo(winner_data['stats']['elo'], loser_data['stats']['elo'])
+	client.delete_room(room)
+	return "good", 200
 
 @app.route("/start_game", methods=['POST'])
 def start_game():
 	roomCode = request.args['roomCode']
-	with open('rooms.json', 'r') as file:
-		rooms = json.load(file)
-	for room in rooms:
-		if room['roomCode'] == roomCode and room['player1'] != None and room['player2'] != None:
-			room['status'] = "Playing"
-			with open('rooms.json', 'w') as file:
-				json.dump(rooms, file, sort_keys=True, indent='\t', separators=(',', ': '))
-			return jsonify({"message" : f"Game started in room {roomCode}"}), 200
-	return jsonify({"message" : "Couldn't start match"}), 404
-
-@app.route("/room_status", methods=['POST'])
-def room_status():
-	user = request.args['player']
-	with open('rooms.json', 'r') as file:
-		rooms = json.load(file)
-	for room in rooms:
-		if room['player1'] == user :
-			if (room['player2'] == None):
-				return jsonify({"status" : "Waiting for player 2"}), 409
-			else:
-				return jsonify({"status" : "Ready", "player" : room['player2']}), 200
+	room = client.get_room(roomCode)
+	if room['player_1'] is None or room['player_2'] is None:
+		return "Need 2 players", 404
+	room['status'] = 'Playing'
+	return jsonify({"message" : f"Game started in room {roomCode}"}), 200
 
 @app.route("/join_room", methods=['POST'])
 def join_room():
 	user = request.args['player']
 	roomCode = request.args['roomCode']
-	with open('rooms.json', 'r') as file:
-		rooms = json.load(file)
-	for room in rooms:
-		if room['roomCode'] == roomCode:
-			if room['player1'] == user or room['player2'] == user:
-				if room['player1'] == user:
-					return jsonify({"message" : f"Player {user} joined room {roomCode}", "player1" : room['player1'], 'roomCode': roomCode}), 200
-				else:
-					return jsonify({"message" : f"Player {user} joined room {roomCode}", "player1" : room['player1'], 'roomCode': roomCode}), 200
-			if room['player2'] == None:
-				room['player2'] = user
-				with open('rooms.json', 'w') as file:
-					json.dump(rooms, file, sort_keys=True, indent='\t', separators=(',', ': '))
-				return jsonify({"message" : f"Player {user} joined room {roomCode}", "player1" : room['player1'], 'roomCode': roomCode}), 200
-			else:
-				return jsonify({"message" : f"Room {roomCode} is full", 'roomCode': roomCode}), 409
-	return jsonify({"message" : f"Room {roomCode} not found", 'roomCode': roomCode}), 404
+	player = client.get_user(user)
+	room = client.get_room(roomCode)
+	if room is None:
+		return "Room not found", 404
+	if player['room'] != None:
+		return "Player already in a room", 409
+	if room['player_1'] != None and room['player_2'] != None:
+		return "Room is full", 409
+	if room['player_1'] is None:
+		room['player_1'] == player['username']
+		player['room'] = roomCode
+		return "Player succesfully joined", 200
+	elif room['player_2'] is None:
+		room['player_2'] == player['username']
+		player['room'] = roomCode
+		return "Player succesfully joined", 200
 
 @app.route("/create_room", methods=['POST'])
 def create_room():
 	user = request.args['player']
-	with open('rooms.json', 'r') as file:
-		rooms = json.load(file)
-	for room in rooms:
-		if room['player1'] == user or room['player2'] == user:
-			return jsonify({"message" : f"Player already in a room ({room['roomCode']})", 'roomCode': room['roomCode']}), 409
-	roomCode = id_generator()
-	rooms.append({"roomCode": roomCode, "player1": user, "player2": None, "status": "Waiting for player 2"})
-	with open('rooms.json', 'w') as file:
-		json.dump(rooms, file, sort_keys=True, indent='\t', separators=(',', ': '))
-	return jsonify({"roomCode": roomCode}), 200
+	player = client.get_user(user)
+	if player['room'] == None:
+		room_code = id_generator()
+		client.create_room(player, room_code)
+		player['room'] = room_code
+		return jsonify({"roomCode": room_code}), 200
+	return "Player already in a room", 400
 
-@app.route("/get_stats", methods=['POST'])
-def get_stats():
-	login = request.args['player']
-	with open('database.json', 'r') as file:
-		data = json.load(file)
-	for player in data:
-		if player['login'] == login:
-			return (jsonify(player['stats']['elo']))
-	player = {
-		"login": login,
-		"stats": {
-			"elo": 500
-		}
-	}
-	data.append(player)
-	with open('database.json', 'w') as file:
-		json.dump(data, file, sort_keys=True, indent='\t', separators=(',', ': '))
-	return (jsonify(player['stats']['elo']))
-
-@app.route("/send_invite", methods=['POST'])
-def send_invite():
-	invite = request.args
-	if (invite['from'] == invite['to']):
-		return jsonify({"message": "You cannot invite yourself"}), 400
-	with open('database.json', 'r') as file:
-		data = json.load(file)
-	for user in data:
-		if user['login'] == invite['to']:
-			if (invite['from'] in [inv['from'] for inv in user['invites']]):
-				return jsonify({"message": "Player already invited"}), 409
-			user['invites'].append({'from': invite['from'], 'time': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
-			with open('database.json', 'w') as file:
-				json.dump(data, file, sort_keys=True, indent='\t', separators=(',', ': '))
-			return jsonify({"message": "Invite sent successfully"}), 200
-	else:
-		return jsonify({"message": "Player not found"}), 404
-	
 @app.route('/auth/42/callback', methods=['POST'])
 def auth_callback():
 	code = request.args.get('code')
-
 	token_url = 'https://api.intra.42.fr/oauth/token'
 	with open('API_DONT_PUSH.json', 'r') as file:
 		api = json.load(file)
-	client_id = api['client_id']
-	client_secret = api['client_secret']
-	redirect_uri = 'http://127.0.0.1:5000/'
+	client_id = api[0]['client_id']
+	client_secret = api[0]['client_secret']
+	redirect_uri = 'http://127.0.0.1:5000/confirm_token'
 	params = {
 		'grant_type': 'authorization_code',
 		'client_id': client_id,
@@ -166,25 +130,58 @@ def auth_callback():
 		'redirect_uri': redirect_uri
 	}
 	response = requests.post(token_url, data=params)
-	print(response.json())
 	if response.ok:
 		access_token = response.json()['access_token']
 		response = requests.get('https://api.intra.42.fr/v2/me', headers={'Authorization': f'Bearer {access_token}'}).json()
-		return {"userId": response['login'], "image": response['image']['versions']['small']}, 200
+		payload = {"userId": response['login'], "image": response['image']['versions']['small']}
+		session['user_info'] = payload
+		client.login_username(response['login'])
+		return payload, 200
 	else:
 		return 'Token exchange failed', 400
+
+@app.route('/get_user_info')
+def get_user_info():
+	user_info = session.get('user_info')
+	print(user_info)
+	if user_info:
+		return user_info, 200
+	else:
+		return 'User not found.', 404
+
+@app.route('/player_leave_room')
+def	player_leave_room():
+	user = request.args['player']
+	room_code = request.args['roomCode']
+	client.player_leave_room(room_code, user)
 
 @app.route('/match/<roomCode>', methods=['GET'])
 def match(roomCode):
 	return render_template("match.html", roomCode=roomCode)
 
+@app.route("/confirm_token")
+def confirm_token():
+	return render_template("confirm_token.html")
+
 @app.route("/")
 def render_page():
-	return render_template("index.html")\
+	user_info = session.get('user_info')
+	if user_info:
+		return render_template("index.html")
+	else:
+		return render_template("login.html")
+
+@app.route("/home")
+def render_index_page():
+	user_info = session.get('user_info')
+	if user_info:
+		return render_template("index.html")
+	else:
+		return render_template("login.html")
 
 @app.route('/<path:filename>')
 def serve_file(filename):
 	return send_from_directory('.', filename)
 
 if __name__ == "__main__":
-	app.run(host='0.0.0.0')
+	socketio.run(app, host='0.0.0.0')

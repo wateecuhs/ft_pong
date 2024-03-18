@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>ft_pong</title>
+	<style>
+		button {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			border-radius: 5px;
+			padding-left: 2%;
+			padding-right: 2%;
+			padding-top: 1%;
+			padding-bottom: 1%;
+			background-color: rgb(0, 123, 255);
+			color: rgb(255, 255, 255);
+			font-size: medium;
+			font-weight: bold;
+		}
+		body {
+			background-color: bisque;
+		}
+	</style>
+</head>
+<body>
+	<button id="login">
+		LOGIN WITH 42
+	</button>
+	<script type="text/javascript">
+		document.getElementById("login").onclick = function () {
+			location.href = "https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-980c828f0609cae0f6762042edb5fa99953c2c0d899e807c79bca9e17c8db2bf&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000%2Fconfirm_token&response_type=code";
+		};
+	</script>
+</body>
+</html>

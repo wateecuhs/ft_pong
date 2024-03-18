@@ -4,7 +4,7 @@
 	<meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<script src="https://cdn.jsdelivr.net/npm/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
 	<link rel="stylesheet" href="stylesheet.css">
 	<title>ft_pong</title>
 </head>
@@ -12,12 +12,12 @@
 	<div class="menu">
 		<div class="title-box">
 			<img src="assets/ping-pong.png" class="ping-pong-icon" />
-			<h1 class="ping-pong-title">Ping Pong</h1>
+			<h1 class="ping-pong-title">ft_pong</h1>
 		</div>
 		<div class="menu-item" id="menu-item-container">
-			<input id="player1" class="login-input" type="text" placeholder="Login">
-			<button id="login" class="sign-in-btn">SIGN IN</button>
-			<!-- <a id="login" href="https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-980c828f0609cae0f6762042edb5fa99953c2c0d899e807c79bca9e17c8db2bf&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000%2F&response_type=code">LOGIN</a> -->
+			<h1 id="user-id">
+
+			</h1>
 		</div>
 	</div>
 	<div id="canva" class="canva">
@@ -31,19 +31,18 @@
 			<p id="room_errors" class="text"></p>
 			<p id="player1_name" class="player_names"></p>
 			<p id="player2_name" class="player_names"></p>
-			<button id="open-button" class="open-button" onclick="openForm()">START MATCH</button>
-			<!-- The form -->
+			<button id="leave-button" onclick="leaveRoom()">LEAVE ROOM</button>
+			<button id="open-button" class="open-button" onclick="openForm()" disabled="true">START MATCH</button>
 			<div class="form-popup" id="myForm">
 			<form class="form-container">
-				<h1 id="ongoing-match">ONGOING MATCH</h1>
-				<h3 id="ongoing-match"><b>WHO WON ?</b></label>
+				<h1 >ONGOING MATCH</h1>
+				<h3 ><b>WHO WON ?</h3>
 				<div class="winner-box">
-					<button type="submit" class="btn">PLAYER 1</button>
-					<button type="button" class="btn player2">PLAYER 2</button>
+					<button id="player1-win" type="button" class="btn">PLAYER 1</button>
+					<button id="player2-win" type="button" class="btn player2">PLAYER 2</button>
 				</div>
 			</form>
 			</div>
-			<!-- <button id="start" class="button" onclick="startGame()">START MATCH</button> -->
 		</div>
 		<div id="stats-container">
 			<h1 id="stats-h1" class="text">STATS</h1>

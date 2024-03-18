@@ -1,8 +1,8 @@
 [
 	{
 		"player1": "panger",
-		"player2": "test",
-		"roomCode": "9ESJS4",
-		"status": "Playing"
+		"player2": null,
+		"roomCode": "R2LMVP",
+		"status": "Waiting for player 2"
 	}
 ]

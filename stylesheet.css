@@ -114,9 +114,9 @@ textarea:focus, input:focus{
 	position: absolute;
 	display: flex;
 	flex-direction: column;
-	box-shadow: 0 0 50px 15px #535353;
+	box-shadow: 0 0 50px 15px rgba(255, 255, 255, 0.352);
 	border-radius: 5px;
-	background-color: #acabb9;
+	background-color: rgb(255, 255, 255);
 }
 
 /* -- OTHER -- */
@@ -129,9 +129,9 @@ textarea:focus, input:focus{
 	position: absolute;
 	display: flex;
 	flex-direction: column;
-	box-shadow: 0 0 50px 15px #535353;
+	box-shadow: 0 0 50px 15px rgba(255, 255, 255, 0.352);
 	border-radius: 5px;
-	background-color: #acabb9;
+	background-color: rgb(255, 255, 255);
 }
 #copyRoomCode {
 	font-size: 0;
@@ -317,7 +317,7 @@ textarea:focus, input:focus{
     transform: translateX(-50%);
 }
 #profile_pic {
-	right: 1%;
+	right: 3%;
 	top: 50%;
 	width: 64px;
 	height: 64px;
@@ -334,6 +334,11 @@ textarea:focus, input:focus{
 	transform: translateX(-50%);
 	position: relative;
 }
+#user-id {
+	right: 15%;
+	position: absolute;
+	color: #0075C4;
+}
 .winner-box {
 	display: flex;
 	align-items: center;
@@ -343,9 +348,8 @@ textarea:focus, input:focus{
 	height: 100%;
 }
 
-/* Button used to open the contact form - fixed at the bottom of the page */
-.open-button {
-  background-color: #555;
+#leave-button {
+  background-color: #f82121;
   color: white;
   padding: 16px 20px;
   border: none;
@@ -353,11 +357,26 @@ textarea:focus, input:focus{
   opacity: 0.8;
   position: absolute;
   left: 5%;
-  bottom: 4%;
+  bottom: 15%;
   width: 90%;
+  display: none;
 }
+#leave-button.show {
+	display: unset;
+}
+.open-button {
+	background-color: #555;
+	color: white;
+	padding: 16px 20px;
+	border: none;
+	cursor: pointer;
+	opacity: 0.8;
+	position: absolute;
+	left: 5%;
+	bottom: 4%;
+	width: 90%;
+  }
 
-/* The popup form - hidden by default */
 .form-popup {
   display: none;
   position: absolute;
@@ -368,6 +387,7 @@ textarea:focus, input:focus{
   color: white;
   border: 3px solid #f1f1f1;
   background-color: #555;
+  transition: all 0.5s ease;
 }
 
 /* Add styles to the form container */
@@ -394,16 +414,32 @@ textarea:focus, input:focus{
 
 /* Set a style for the submit/login button */
 .form-container .btn {
-  background-color: #0075C4;
-  color: white;
-  padding: 16px 20px;
-  border: none;
-  cursor: pointer;
-  width: 40%;
-  margin-bottom:10px;
-  opacity: 0.8;
+	top: 30%;
+	background-color: #0075C4;
+	color: white;
+	padding: 16px 20px;
+	border: none;
+	cursor: pointer;
+	width: 40%;
+	margin-bottom:10px;
+	opacity: 0.8;
 }
-
+.form-container h1{
+	left: 50%;
+	width: 100%;
+    text-align: center;
+	transform: translateX(-50%);
+	position: relative;
+	top: 5%;
+}
+.form-container h3{
+	left: 50%;
+	width: 100%;
+    text-align: center;
+	transform: translateX(-50%);
+	position: relative;
+	top: 15%;
+}
 /* Add a red background color to the cancel button */
 .form-container .player2 {
 	background-color: #EFA00B;
@@ -412,4 +448,4 @@ textarea:focus, input:focus{
 /* Add some hover effects to buttons */
 .form-container .btn:hover, .open-button:hover {
   opacity: 1;
-} 
+}
