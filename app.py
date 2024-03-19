@@ -5,7 +5,7 @@ import random
 import requests
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
 from db import UserDB
-
+from sockets import User
 app = Flask(__name__)
 
 with open('API_DONT_PUSH.json', 'r') as file:
@@ -13,21 +13,113 @@ with open('API_DONT_PUSH.json', 'r') as file:
 app.secret_key = api[0]['flask_secret']
 client = UserDB(api[0]['connection_string'])
 socketio = SocketIO(app)
+active_users = {}
+
+def format_room_data(room):
+	room_data = {
+		"player_1": {
+			"username": room['player_1'],
+			"stats": client.get_user(room['player_1'])['stats'] if client.get_user(room['player_1']) is not None else None
+			},
+		"player_2": {
+			"username": room['player_2'],
+			"stats": client.get_user(room['player_2'])['stats']  if client.get_user(room['player_2']) is not None else None
+			},
+		"room_code": room['room_code']}
+	return room_data
 
 @socketio.on('join')
 def on_join(data):
-	print(data)
-	username = data['username']
-	room = data['room']
-	join_room(room)
-	send(username + ' has entered the room.', to=room)
+	user_id = data['username']
+	room_code = data['room']
+	player = client.get_user(user_id)
+	room = client.get_room(room_code)
+	if room is None:
+		return {"message" : "Room not found"}, 404
+	if player['room'] == room_code and (room['player_1'] == player['username'] or room['player_2'] == player['username']):
+		user = get_or_create_user(user_id)
+		room_data = format_room_data(room)
+		user.join_room(room_data)
+		room = client.get_room(room_code)
+		return room_data, 200
+	if player['room'] != None:
+		return {"message" : "Player already in a room"}, 409
+	if room['player_1'] != None and room['player_2'] != None:
+		return {"message" : "Room is full"}, 409
+	user = get_or_create_user(user_id)
+	if room['player_1'] is None:
+		client.update_room(room_code, {'$set': {'player_1': player['username']}})
+		client.update_user(player['username'], {'$set': {'room': room_code}})
+	else:
+		client.update_room(room_code, {'$set': {'player_2': player['username']}})
+		client.update_user(player['username'], {'$set': {'room': room_code}})
+	room = client.get_room(room_code)
+	room_data = format_room_data(room)
+	user.join_room(room_data)
+	return room_data, 200
+
+@socketio.on('create')
+def on_create(data):
+	print(data)	
+	user_id = data['username']
+	player = client.get_user(user_id)
+	if player['room'] == None:
+		room_code = id_generator()
+		client.create_room(player['username'], room_code)
+		client.update_user(player['username'], {'$set': {'room': room_code}})
+		player['room'] = room_code
+		user = get_or_create_user(user_id)
+		room = client.get_room(room_code)
+		room_data = format_room_data(room)
+		user.join_room(room_data)
+		return room_data, 200
+	return {"message": f"Player already in room {player['room']}"}, 409
 
 @socketio.on('leave')
 def on_leave(data):
-	username = data['username']
-	room = data['room']
-	leave_room(room)
-	send(username + ' has left the room.', to=room)
+	user_id = data['username']
+	user = get_user(user_id)
+	room = client.get_user(user_id)['room']
+	client.player_leave_room(room, user_id)
+	room_data = client.get_room(room)
+	if user:
+		if room_data is None:
+			user.leave_room_destroy(room)
+		else:
+			user.leave_room(format_room_data(room_data))
+	return room, 200
+
+@socketio.on('connect')
+def test_connect():
+	user_id = session.get('user_info').get('userId')
+	active_users[user_id] = User(user_id)
+	print(f"{user_id} connected.")
+
+@socketio.on('disconnect')
+def on_disconnect():
+	user_id = session.get('user_info').get('userId')
+	if user_id in active_users:
+		print(f"{user_id} disconnected.")
+		del active_users[user_id]
+
+def create_room():
+	user = request.args['player']
+	player = client.get_user(user)
+	if player['room'] == None:
+		room_code = id_generator()
+		client.create_room(player['username'], room_code)
+		client.update_user(player['username'], {'$set': {'room': room_code}})
+		player['room'] = room_code
+		return jsonify({"roomCode": room_code}), 200
+	return "Player already in a room", 400
+
+def get_or_create_user(user_id):
+	if user_id not in active_users:
+		active_users[user_id] = User(user_id)
+	return active_users[user_id]
+
+def get_user(user_id):
+	return active_users.get(user_id)
 
 @app.route("/get_room", methods=['POST'])
 def	get_room():
@@ -81,41 +173,14 @@ def start_game():
 	room['status'] = 'Playing'
 	return jsonify({"message" : f"Game started in room {roomCode}"}), 200
 
-@app.route("/join_room", methods=['POST'])
-def join_room():
-	user = request.args['player']
-	roomCode = request.args['roomCode']
-	player = client.get_user(user)
-	room = client.get_room(roomCode)
-	if room is None:
-		return "Room not found", 404
-	if player['room'] != None:
-		return "Player already in a room", 409
-	if room['player_1'] != None and room['player_2'] != None:
-		return "Room is full", 409
-	if room['player_1'] is None:
-		room['player_1'] == player['username']
-		player['room'] = roomCode
-		return "Player succesfully joined", 200
-	elif room['player_2'] is None:
-		room['player_2'] == player['username']
-		player['room'] = roomCode
-		return "Player succesfully joined", 200
-
-@app.route("/create_room", methods=['POST'])
-def create_room():
-	user = request.args['player']
-	player = client.get_user(user)
-	if player['room'] == None:
-		room_code = id_generator()
-		client.create_room(player, room_code)
-		player['room'] = room_code
-		return jsonify({"roomCode": room_code}), 200
-	return "Player already in a room", 400
-
 @app.route('/auth/42/callback', methods=['POST'])
 def auth_callback():
 	code = request.args.get('code')
+	if code == 'ADMIN':
+		payload = {"userId": 'ADMIN', "image": 'https://cdn.intra.42.fr/users/e3f8a534b7223eb50fedd0d41dcbd75f/small_panger.jpg'}
+		session['user_info'] = payload
+		client.login_username('ADMIN')
+		return payload, 200
 	token_url = 'https://api.intra.42.fr/oauth/token'
 	with open('API_DONT_PUSH.json', 'r') as file:
 		api = json.load(file)
@@ -148,12 +213,6 @@ def get_user_info():
 		return user_info, 200
 	else:
 		return 'User not found.', 404
-
-@app.route('/player_leave_room')
-def	player_leave_room():
-	user = request.args['player']
-	room_code = request.args['roomCode']
-	client.player_leave_room(room_code, user)
 
 @app.route('/match/<roomCode>', methods=['GET'])
 def match(roomCode):

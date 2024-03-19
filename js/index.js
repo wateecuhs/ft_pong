@@ -1,15 +1,51 @@
-var socket = io();
-		socket.on('connect', function() {
-		socket.emit('join', {
-			"username": 'panger',
-			"room": 'QWEASD'
-		});
-});
 var userId = undefined;
 var roomCode = undefined;
-var animateDotsBool = false;
 const roomError = document.getElementById('room_errors');
-var playerwait = undefined;
+var socket = io();
+var player1_animation = false;
+var player2_animation = false;
+
+function	updatePlayers(response) {
+	const player1 = document.getElementById('player1_name');
+	const player2 = document.getElementById('player2_name');
+	if (response['player_1'] !== null && response['player_1']['stats'] !== null) {
+		// player1_animation = false;
+		player1.textContent = 'Player 1: ' + response['player_1']['username'] + ' (' + response['player_1']['stats']['elo'] + ')';
+	}
+	else {
+		// player1_animation = true;
+		player1.textContent = 'Player 1: Waiting for someone to join.'
+		// animateDots(document.getElementById('player1_name'), 1);
+	}
+	if (response['player_2'] !== null && response['player_2']['stats'] !== null) {
+		// player2_animation = false;
+		player2.textContent = 'Player 2: ' + response['player_2']['username'] + ' (' + response['player_2']['stats']['elo'] + ')';
+	}
+	else {
+		// animateDots(document.getElementById('player2_name'), 2);
+		// player2_animation = true;
+		player2.textContent = 'Player 2: Waiting for someone to join.'
+	}
+}
+
+socket.on("user_joined", function(data) {
+	console.log(data);
+	updatePlayers(data);
+	if (data['player_1'] !== null && data['player_2'] !== null) {
+		console.log('READY FOR A MATCH');
+		document.getElementById('open-button').disabled = false;
+		document.getElementById('player1-win').addEventListener('click', player1Win);
+		document.getElementById('player1-win').addEventListener('click', closeForm);
+		document.getElementById('player2-win').addEventListener('click', player2Win);
+		document.getElementById('player2-win').addEventListener('click', closeForm);
+	}
+})
+
+socket.on("user_left", function(data) {
+	console.log('RECEIVED UPDATE');
+	console.log(data);
+	updatePlayers(data);
+})
 
 async function	get_room(roomCode){
 	return fetch(`/get_room?roomCode=${roomCode}`, {
@@ -20,6 +56,7 @@ async function	get_room(roomCode){
 		body: JSON.stringify({userId})
 		})
 	.then(response => {
+		console.log(response);
 		if (!response.ok) {
 			throw new Error('Error getting room');
 		}
@@ -62,24 +99,24 @@ function closeForm() {
 	document.getElementById("open-button").removeEventListener('click', closeForm);
 }
 
-function animateDots() {
-	const player1 = document.getElementById('player1_name');
-	const player2 = document.getElementById('player2_name');
-	var player1Elo = document.getElementById('elo').innerHTML;
-	player1.textContent = 'Player 1: You (' + player1Elo + ')';
-	player2.textContent = 'Player 2: Waiting for someone to join';
-	let dots = '';
-	setInterval(() => {
-		if (animateDotsBool) {
-			if (dots.length === 3) {
-				dots = '';
-			} else {
-				dots += '.';
-			}
-			player2.textContent = 'Player 2: Waiting for someone to join' + dots;
-		}
-	}, 300);
-}
+// function animateDots(document, position) {
+// 	document.textContent = 'Player ' + position + ': Waiting for someone to join';
+// 	let dots = '';
+// 	let inter = setInterval(() => {
+// 			if (dots.length === 3) {
+// 				dots = '';
+// 			} else {
+// 				dots += '.';
+// 			}
+// 			document.textContent = 'Player ' + position + ': Waiting for someone to join' + dots;
+// 			if (position == 1 && player1_animation == false) {
+// 				clearInterval(inter);
+// 			}
+// 			if (position == 2 && player2_animation == false) {
+// 				clearInterval(inter);
+// 			}
+// 	}, 300);
+// }
 
 function	resetMatch(){
 	document.getElementById('createRoom').classList.remove('shrinked');
@@ -95,7 +132,6 @@ function	resetMatch(){
 	document.getElementById('player1_name').textContent = '';
 	document.getElementById('player2_name').textContent = '';
 	document.getElementById('open-button').disabled = true;
-	animateDotsBool = false;
 }
 
 function	fade_button(){
@@ -129,49 +165,14 @@ function	copyRoomCode(){
 	navigator.clipboard.writeText(roomCodeElem.value);
 }
 
-function	waitingForPlayer(){
-	fetch(`/room_status?player=${userId}`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify({userId})
-		})
-		.then(response => response.json())
-		.then(data => {
-			console.log(data);
-			if (data['status'] === 'Ready'){
-				animateDotsBool = false;
-				fetch(`/get_stats?player=${data['player']}`, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify(data['player'])
-				})
-				.then(response => response.json())
-				.then(stats => {
-					document.getElementById('player2_name').textContent = 'Player 2: ' + data['player'] + ' (' + stats['elo'] + ')';
-					document.getElementById('open-button').disabled = false;
-					document.getElementById('player1-win').addEventListener('click', player1Win);
-					document.getElementById('player1-win').addEventListener('click', closeForm);
-					document.getElementById('player2-win').addEventListener('click', player2Win);
-					document.getElementById('player2-win').addEventListener('click', closeForm);
-				})
-				clearTimeout(test);
-			}
-		})
-		.catch(error => {
-			console.log(error);
-		});
-		playerwait = setTimeout(waitingForPlayer, 1000);
-}
-
 function	leaveRoom(){
 	resetMatch();
 	document.getElementById('leave-button').style.display = 'none';
-
-	clearTimeout(playerwait);
+	socket.emit("leave", {'username': userId})
+	// player1_animation = false;
+	// player2_animation = false;
+	document.getElementById('player1_name').textContent = '';
+	document.getElementById('player2_name').textContent = '';
 }
 
 function	joinRoom(){
@@ -180,52 +181,17 @@ function	joinRoom(){
 		return;
 	}
 	roomCode = document.getElementById('roomcode').value;
-	fetch(`/join_room?player=${userId}&roomCode=${roomCode}`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify({userId})
-	})
-	.then(response => {
-		if (!response.ok) {
-			roomError.innerHTML = 'Error joining room';
-			throw new Error('Error joining room');
+	socket.emit("join", {'username': userId, 'room': roomCode}, (response, code) => {
+		if (code !== 200){
+			roomError.innerHTML = response['message'];
+			return ;
 		}
-		return response.json();
-	})
-	.then(data => {
-		console.log(data);
 		document.getElementById('roomcode').value = roomCode;
 		fade_button_right();
-		const player1 = document.getElementById('player1_name');
-		const player2 = document.getElementById('player2_name');
-		var player2Elo = document.getElementById('elo').innerHTML;
-		fetch(`/get_stats?player=${data['player1']}`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(data['player'])
-		})
-		.then(response => response.json())
-		.then(stats => {
-			player1.textContent = 'Player 1: ' + data['player1'] + ' (' + stats['elo'] + ')';
-		})
-			document.getElementById('leave-button').style.display = 'unset';
-			if (data['player1'] === userId){
-				animateDotsBool = true;
-				animateDots();
-				waitingForPlayer();
-		}
-		else{
-			player2.textContent = 'Player 2: You (' + player2Elo + ')';
-		}
+		updatePlayers(response);
+		document.getElementById('leave-button').style.display = 'unset';
 		roomError.innerHTML = '';
-	})
-	.catch(error => {
-		console.error(error.message);
-	});	
+	});
 }
 
 function	createRoom(){
@@ -233,37 +199,20 @@ function	createRoom(){
 		roomError.innerHTML = 'Please log in first';
 		return;
 	}
-	fetch(`/create_room?player=${userId}`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify({userId})
-	})
-	.then(async response => {
-		if (!response.ok) {
-			if (response.status === 409)
-			{
-				let data = await response.json();
-				console.log(data);
-				roomError.innerHTML = 'Error creating room: User already has a room (' + data['roomCode'] +')';
-			}
-			throw new Error('Error creating room');
+	socket.emit('create',{"username": userId}, (response, code) => {
+		console.log(response);
+		console.log(code);
+		if (code !== 200){
+			roomError.innerHTML = response['message'];
+			return ;
 		}
-		return response.json();
-	})
-	.then(data => {
-		console.log(data);
-		document.getElementById('roomcode').value = data.roomCode;
+		document.getElementById('roomcode').value = response['room_code'];
 		fade_button();
-		animateDotsBool = true;
-		animateDots();
-		waitingForPlayer();
+		// animateDots();
 		roomError.innerHTML = '';
-	})
-	.catch(error => {
-		console.error(error);
-	});	
+		document.getElementById('leave-button').style.display = 'unset';
+		updatePlayers(response);
+	});
 }
 
 function	player1Win(){
@@ -410,5 +359,7 @@ window.onload = function(){
 	getUserInfo();
 	document.getElementById('roomcode').value = null;
 	document.getElementById('roomcode').placeholder = 'ROOM CODE';
-	socket.emit()
+	socket.on("connect", function() {
+		console.log("Connected to socket");
+	})
 }

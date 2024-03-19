@@ -35,11 +35,11 @@ class	UserDB:
 	def player_leave_room(self, room_code, username):
 		room = self.get_room(room_code)
 		if room['player_1'] == username:
-			room['player_1'] = None
+			self.update_room(room_code, {'$set': {'player_1': None}})
 		elif room['player_2'] == username:
-			room['player_2'] = None
-		user = self.get_user(username)
-		user['room'] = None
+			self.update_room(room_code, {'$set': {'player_2': None}})
+		self.update_user(username, {'$set': {'room': None}})
+		room = self.get_room(room_code)
 		if room['player_1'] == None and room['player_2'] == None:
 			self.delete_room(room_code)
 
@@ -62,3 +62,9 @@ class	UserDB:
 	def update_room(self, room_code, update):
 		result = self.rooms.update_one({"room_code": room_code}, update)
 		return result.modified_count
+
+if __name__=='__main__':
+	with open('API_DONT_PUSH.json', 'r') as file:
+		api = json.load(file)
+	client = UserDB(api[0]['connection_string'])
+	client.update_user('panger', {'$set': {'room': None}})
