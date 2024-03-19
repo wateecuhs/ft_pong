@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+import json
 
 class	UserDB:
 	def __init__(self, connection_string):
@@ -53,3 +54,11 @@ class	UserDB:
 
 	def get_room(self, room_code):
 		return self.rooms.find_one({"room_code": room_code})
+
+	def update_user(self, username, update):
+		result = self.db.update_one({"username": username}, update)
+		return result.modified_count
+
+	def update_room(self, room_code, update):
+		result = self.rooms.update_one({"room_code": room_code}, update)
+		return result.modified_count
