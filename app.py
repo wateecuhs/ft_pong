@@ -126,8 +126,8 @@ def	get_room():
 	roomCode = request.args['roomCode']
 	room = client.get_room(room_code=roomCode)
 	if room:
-		return jsonify(room), 200
-	return jsonify({"message" : "Room not found"}), 404
+		return format_room_data(room), 200
+	return {"message" : "Room not found"}, 404
 
 @app.route("/get_stats", methods=['POST'])
 def get_stats():
@@ -161,8 +161,16 @@ def declare_winner():
 	if room is None or winner_data is None or loser_data is None:
 		return "error", 404
 	winner_data['stats']['elo'], loser_data['stats']['elo'] = updateElo(winner_data['stats']['elo'], loser_data['stats']['elo'])
-	client.delete_room(room)
-	return "good", 200
+	winner_data['stats']['games'] = winner_data['stats']['games'] + 1
+	winner_data['stats']['wins'] = winner_data['stats']['wins'] + 1
+	loser_data['stats']['games'] = loser_data['stats']['games'] + 1
+	loser_data['stats']['losses'] = loser_data['stats']['losses'] + 1
+	client.update_user(winner, {'$set': {"stats": winner_data['stats']}})
+	client.update_user(winner, {'$set': {"room": None}})
+	client.update_user(loser, {'$set': {"stats": loser_data['stats']}})
+	client.update_user(loser, {'$set': {"room": None}})
+	client.delete_room(roomCode)
+	return jsonify({"message": 'success'}), 200
 
 @app.route("/start_game", methods=['POST'])
 def start_game():

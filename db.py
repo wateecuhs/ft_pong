@@ -67,4 +67,4 @@ if __name__=='__main__':
 	with open('API_DONT_PUSH.json', 'r') as file:
 		api = json.load(file)
 	client = UserDB(api[0]['connection_string'])
-	client.update_user('panger', {'$set': {'room': None}})
+	client.update_user('ADMIN', {'$set': {'room': None}})

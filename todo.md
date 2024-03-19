@@ -1,3 +1,3 @@
-Make start game button always available just displays error when not possible to start the game
-fix the declare winner shit
+websockets for game ending
+find a way to declare winner less prone to abuse (both need to pick the winner ? idk)
 make that shit cleaner

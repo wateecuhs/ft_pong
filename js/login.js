@@ -4,7 +4,6 @@ function getCodeFromUrl() {
 	return code;
 }
 
-
 function	loginAuth(code){
 	fetch(`/auth/42/callback?code=${code}`, {
 		method: 'POST',
@@ -13,6 +12,7 @@ function	loginAuth(code){
 		},
 		body: JSON.stringify({code})
 	}).then(response => {
+		console.log("here");
 		if (!response.ok) {
 			throw new Error('Error logging in');
 		}

@@ -31,14 +31,6 @@ function	updatePlayers(response) {
 socket.on("user_joined", function(data) {
 	console.log(data);
 	updatePlayers(data);
-	if (data['player_1'] !== null && data['player_2'] !== null) {
-		console.log('READY FOR A MATCH');
-		document.getElementById('open-button').disabled = false;
-		document.getElementById('player1-win').addEventListener('click', player1Win);
-		document.getElementById('player1-win').addEventListener('click', closeForm);
-		document.getElementById('player2-win').addEventListener('click', player2Win);
-		document.getElementById('player2-win').addEventListener('click', closeForm);
-	}
 })
 
 socket.on("user_left", function(data) {
@@ -64,7 +56,6 @@ async function	get_room(roomCode){
 	})
 	.then(data => {
 		console.log(data);
-		console.log('RETURNING THIS SHIT\n');
 		return (data);
 	})
 	.catch(error => {
@@ -89,8 +80,27 @@ function	get_stats(userId){
 }
 
 function openForm() {
-	document.getElementById("myForm").style.display = "block";
-	document.getElementById("open-button").removeEventListener('click', openForm);
+	if (roomCode === undefined)
+		return ;
+	get_room(roomCode)
+		.then(room => {
+			if (room['player_1']['username'] != null && room['player_2']['username'] != null) {
+				const player1 = document.getElementById('player1-win');
+				const player2 = document.getElementById('player2-win');
+				player1.innerHTML = room['player_1']['username'];
+				player2.innerHTML = room['player_2']['username'];
+				document.getElementById("myForm").style.display = "block";
+				document.getElementById("open-button").removeEventListener('click', openForm);
+				player1.addEventListener('click', player1Win);
+				player1.addEventListener('click', closeForm);
+				player2.addEventListener('click', player2Win);
+				player2.addEventListener('click', closeForm);
+				roomError.innerHTML = '';
+			}
+			else {
+				roomError.innerHTML = "You need to be in a room with 2 players to start a game.";
+			}
+		})
   }
   
 function closeForm() {
@@ -119,6 +129,8 @@ function closeForm() {
 // }
 
 function	resetMatch(){
+	roomCode = undefined;
+	document.getElementById("myForm").style.display = "none";
 	document.getElementById('createRoom').classList.remove('shrinked');
 	document.getElementById('createRoom').classList.remove('shrinked2');
 	document.getElementById('joinRoom').classList.remove('shrinked');
@@ -173,6 +185,7 @@ function	leaveRoom(){
 	// player2_animation = false;
 	document.getElementById('player1_name').textContent = '';
 	document.getElementById('player2_name').textContent = '';
+	roomCode = undefined;
 }
 
 function	joinRoom(){
@@ -188,6 +201,7 @@ function	joinRoom(){
 		}
 		document.getElementById('roomcode').value = roomCode;
 		fade_button_right();
+		roomCode = response['room_code']
 		updatePlayers(response);
 		document.getElementById('leave-button').style.display = 'unset';
 		roomError.innerHTML = '';
@@ -207,6 +221,7 @@ function	createRoom(){
 			return ;
 		}
 		document.getElementById('roomcode').value = response['room_code'];
+		roomCode = response['room_code']
 		fade_button();
 		// animateDots();
 		roomError.innerHTML = '';
@@ -218,9 +233,8 @@ function	createRoom(){
 function	player1Win(){
 	get_room(roomCode)
 	.then(room => {
-		console.log('ROOM');
 		console.log(room);
-		fetch(`/declare_winner?roomCode=${roomCode}&winner=${room['player1']}&loser=${room['player2']}`, {
+		fetch(`/declare_winner?roomCode=${roomCode}&winner=${room['player_1']['username']}&loser=${room['player_2']['username']}`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
@@ -228,6 +242,7 @@ function	player1Win(){
 			body: JSON.stringify({userId})
 		})
 		.then(response => {
+			console.log(response);
 			if (!response.ok) {
 				throw new Error('Error declaring winner');
 			}
@@ -253,7 +268,7 @@ function	player2Win(){
 	.then(room => {
 		console.log('ROOM');
 		console.log(room);
-		fetch(`/declare_winner?roomCode=${roomCode}&winner=${room['player2']}&loser=${room['player1']}`, {
+		fetch(`/declare_winner?roomCode=${roomCode}&winner=${room['player_2']['username']}&loser=${room['player_1']['username']}`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
