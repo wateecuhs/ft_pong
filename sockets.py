@@ -14,8 +14,8 @@ class User:
 	def	leave_room(self, room):
 		print(room)
 		self.rooms.discard(room['room_code'])
-		leave_room(room['room_code'])
 		emit('user_left', room, room=room['room_code'], include_self=False)
+		leave_room(room['room_code'])
 		print(f"User {self.user_id} left room: {room['room_code']}")
 
 	def	leave_room_destroy(self, room_code):
@@ -23,3 +23,10 @@ class User:
 		self.rooms.discard(room_code)
 		leave_room(room_code)
 		print(f"User {self.user_id} left room: {room_code}")
+
+	def game_ended(self, room_code):
+		print(room_code)
+		self.rooms.discard(room_code)
+		emit('game_ended', room=room_code, include_self=False)
+		leave_room(room_code)
+		print(f"User {self.user_id} finished a match in room: {room_code}")

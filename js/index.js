@@ -29,14 +29,17 @@ function	updatePlayers(response) {
 }
 
 socket.on("user_joined", function(data) {
-	console.log(data);
 	updatePlayers(data);
 })
 
 socket.on("user_left", function(data) {
-	console.log('RECEIVED UPDATE');
-	console.log(data);
 	updatePlayers(data);
+})
+
+socket.on("game_ended", function() {
+	resetMatch();
+	updateStats(userId);
+	document.getElementById('leave-button').style.display = 'none';
 })
 
 async function	get_room(roomCode){
@@ -126,15 +129,17 @@ function closeForm() {
 // 				clearInterval(inter);
 // 			}
 // 	}, 300);
-// }
+// } 
 
 function	resetMatch(){
 	roomCode = undefined;
 	document.getElementById("myForm").style.display = "none";
 	document.getElementById('createRoom').classList.remove('shrinked');
 	document.getElementById('createRoom').classList.remove('shrinked2');
+	document.getElementById('createRoom').disabled = false;
 	document.getElementById('joinRoom').classList.remove('shrinked');
 	document.getElementById('joinRoom').classList.remove('shrinked2');
+	document.getElementById('joinRoom').disabled = false;
 	document.getElementById('roomcode').classList.remove('created');
 	document.getElementById('roomcode').classList.remove('created_right');
 	document.getElementById('roomcode').disabled = false;
@@ -151,6 +156,7 @@ function	fade_button(){
 	button.classList.add('shrinked');
 	let joinButton = document.getElementById('joinRoom');
 	joinButton.classList.add('shrinked');
+	joinButton.disabled = true;
 	let roomCodeElem = document.getElementById('roomcode');
 	roomCodeElem.classList.add('created');
 	roomCodeElem.disabled = true;
@@ -161,6 +167,7 @@ function	fade_button(){
 function	fade_button_right(){
 	let button = document.getElementById('createRoom');
 	button.classList.add('shrinked2');
+	button.disabled = true;
 	let joinButton = document.getElementById('joinRoom');
 	joinButton.classList.add('shrinked2');
 	let roomCodeElem = document.getElementById('roomcode');
@@ -233,30 +240,13 @@ function	createRoom(){
 function	player1Win(){
 	get_room(roomCode)
 	.then(room => {
-		console.log(room);
-		fetch(`/declare_winner?roomCode=${roomCode}&winner=${room['player_1']['username']}&loser=${room['player_2']['username']}`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({userId})
-		})
-		.then(response => {
-			console.log(response);
-			if (!response.ok) {
-				throw new Error('Error declaring winner');
-			}
-			return response.json();
-		})
-		.then(data => {
-			console.log(data);
+		room['player_1']['winner'] = true;
+		room['player_2']['winner'] = false;
+		socket.emit("game_ended", room, function() {
 			resetMatch();
-			updateElo(userId);
-	
-		})
-		.catch(error => {
-			console.error(error);
-		});	
+			updateStats(userId);
+			document.getElementById('leave-button').style.display = 'none';
+		});
 	})
 	.catch(error => {
 		console.error(error);
@@ -266,29 +256,13 @@ function	player1Win(){
 function	player2Win(){
 	get_room(roomCode)
 	.then(room => {
-		console.log('ROOM');
-		console.log(room);
-		fetch(`/declare_winner?roomCode=${roomCode}&winner=${room['player_2']['username']}&loser=${room['player_1']['username']}`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({userId})
-		})
-		.then(response => {
-			if (!response.ok) {
-				throw new Error('Error declaring winner');
-			}
-			return response.json();
-		})
-		.then(data => {
-			console.log(data);
-			updateElo(userId);
+		room['player_1']['winner'] = false;
+		room['player_2']['winner'] = true;
+		socket.emit("game_ended", room, function() {
 			resetMatch();
-		})
-		.catch(error => {
-			console.error(error);
-		});	
+			updateStats(userId);
+			document.getElementById('leave-button').style.display = 'none';
+		});
 	})
 	.catch(error => {
 		console.error(error);
@@ -327,7 +301,7 @@ function	startGame(){
 	});	
 }
 
-function	updateElo(userId) {
+function	updateStats(userId) {
 	fetch(`/get_stats?player=${userId}`, {
 		method: 'POST',
 		headers: {
@@ -337,7 +311,10 @@ function	updateElo(userId) {
 	})
 	.then(response => response.json())
 	.then(stats => {
-		document.getElementById('elo').innerHTML = stats['elo'];
+		document.getElementById('elo-display').innerHTML = 'ELO: ' + stats['elo'];
+		document.getElementById('games-display').innerHTML = 'GAMES PLAYED: ' + stats['games'];
+		document.getElementById('wins-display').innerHTML = 'WINS: ' + stats['wins'];
+		document.getElementById('losses-display').innerHTML = 'LOSSES: ' + stats['losses'];
 	})
 }
 
@@ -355,17 +332,32 @@ function	getUserInfo() {
 			img.id = 'profile_pic';
 			img.classList.add('profile_pic');
 			document.getElementById('menu-item-container').appendChild(img);
-			fetch(`/get_stats?player=${userId}`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({userId})
-			})
-			.then(response => response.json())
-			.then(data => {
-				document.getElementById('elo').innerHTML = data['elo'];
-				roomError.innerHTML = '';
+			updateStats(userId);
+		})
+}
+
+function	renderLeaderboard() {
+	fetch(`/get_leaderboard`)
+		.then(response => response.json())
+		.then(data =>{
+			leaderboard.innerHTML = '';
+			data.forEach(element => {
+				let row = document.createElement("tr");
+				row.classList.add('leaderboard-row')
+				let img = document.createElement('img');
+				img.src = element['image'];
+				img.alt	= 'player picture';
+				img.classList.add('leaderboard-pics');
+				let name = document.createElement('td');
+				name.innerHTML = element['username'];
+				let elo = document.createElement('td');
+				elo.innerHTML = element['elo'];
+				document.getElementById('leaderboard').appendChild(row);
+				row.appendChild(img);
+				row.appendChild(name);
+				name.classList.add('leaderboard-text');
+				elo.classList.add('leaderboard-text');
+				row.appendChild(elo);
 			})
 		})
 }
@@ -375,6 +367,8 @@ window.onload = function(){
 	document.getElementById('roomcode').value = null;
 	document.getElementById('roomcode').placeholder = 'ROOM CODE';
 	socket.on("connect", function() {
-		console.log("Connected to socket");
+		console.log("Connected");
 	})
+	renderLeaderboard();
+	setInterval(renderLeaderboard, 60000);
 }

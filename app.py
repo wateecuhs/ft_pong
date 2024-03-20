@@ -1,6 +1,7 @@
 from flask import Flask, render_template, send_from_directory, request, jsonify, Response, redirect,send_file, session
 import json
 import string
+import bisect
 import random
 import requests
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
@@ -89,6 +90,31 @@ def on_leave(data):
 			user.leave_room(format_room_data(room_data))
 	return room, 200
 
+@socketio.on('game_ended')
+def	game_ended(data):
+	if data['player_1']['winner'] == True:
+		winner = client.get_user(data['player_1']['username'])
+		loser = client.get_user(data['player_2']['username'])
+	else:
+		winner = client.get_user(data['player_2']['username'])
+		loser = client.get_user(data['player_1']['username'])
+	room_code = data['room_code']
+	winner['stats']['elo'], loser['stats']['elo'] = updateElo(winner['stats']['elo'], loser['stats']['elo'])
+	winner['stats']['games'] = winner['stats']['games'] + 1
+	winner['stats']['wins'] = winner['stats']['wins'] + 1
+	loser['stats']['games'] = loser['stats']['games'] + 1
+	loser['stats']['losses'] = loser['stats']['losses'] + 1
+	client.update_user(winner['username'], {'$set': {"stats": winner['stats']}})
+	client.update_user(winner['username'], {'$set': {"room": None}})
+	client.update_user(loser['username'], {'$set': {"stats": loser['stats']}})
+	client.update_user(loser['username'], {'$set': {"room": None}})
+	client.delete_room(room_code)
+	user = get_or_create_user(winner['username'])
+	if user:
+		user.game_ended(room_code)
+	user = get_or_create_user(loser['username'])
+	if user:
+		user.game_ended(room_code)
 @socketio.on('connect')
 def test_connect():
 	user_id = session.get('user_info').get('userId')
@@ -150,27 +176,14 @@ def updateElo(winner, loser):
 	R2 = R2 + k * (0 - E2)
 	return (int(R1), int(R2))
 
-@app.route("/declare_winner", methods=['POST'])
-def declare_winner():
-	winner = request.args['winner']
-	loser = request.args['loser']
-	roomCode = request.args['roomCode']
-	room = client.get_room(roomCode)
-	winner_data = client.get_user(winner)
-	loser_data = client.get_user(loser)
-	if room is None or winner_data is None or loser_data is None:
-		return "error", 404
-	winner_data['stats']['elo'], loser_data['stats']['elo'] = updateElo(winner_data['stats']['elo'], loser_data['stats']['elo'])
-	winner_data['stats']['games'] = winner_data['stats']['games'] + 1
-	winner_data['stats']['wins'] = winner_data['stats']['wins'] + 1
-	loser_data['stats']['games'] = loser_data['stats']['games'] + 1
-	loser_data['stats']['losses'] = loser_data['stats']['losses'] + 1
-	client.update_user(winner, {'$set': {"stats": winner_data['stats']}})
-	client.update_user(winner, {'$set': {"room": None}})
-	client.update_user(loser, {'$set': {"stats": loser_data['stats']}})
-	client.update_user(loser, {'$set': {"room": None}})
-	client.delete_room(roomCode)
-	return jsonify({"message": 'success'}), 200
+@app.route("/get_leaderboard")
+def get_leaderboard():
+	doc = client.db.find()
+	leaderboard = []
+	for user in doc:
+		if len(leaderboard) < 10 or leaderboard[9]['elo'] < user['stats']['elo']:
+			bisect.insort(leaderboard, {"username": user['username'], "elo": user['stats']['elo'], "image": user['image']}, key=lambda x: -1 * x["elo"])
+	return leaderboard[:5], 200
 
 @app.route("/start_game", methods=['POST'])
 def start_game():
@@ -184,11 +197,11 @@ def start_game():
 @app.route('/auth/42/callback', methods=['POST'])
 def auth_callback():
 	code = request.args.get('code')
-	if code == 'ADMIN':
-		payload = {"userId": 'ADMIN', "image": 'https://cdn.intra.42.fr/users/e3f8a534b7223eb50fedd0d41dcbd75f/small_panger.jpg'}
-		session['user_info'] = payload
-		client.login_username('ADMIN')
-		return payload, 200
+	# if code == 'ADMIN':
+	# 	payload = {"userId": 'ADMIN', "image": 'https://cdn.intra.42.fr/users/e3f8a534b7223eb50fedd0d41dcbd75f/small_panger.jpg'}
+	# 	session['user_info'] = payload
+	# 	client.login_username('ADMIN', image="https://cdn.intra.42.fr/users/e3f8a534b7223eb50fedd0d41dcbd75f/small_panger.jpg")
+	# 	return payload, 200
 	token_url = 'https://api.intra.42.fr/oauth/token'
 	with open('API_DONT_PUSH.json', 'r') as file:
 		api = json.load(file)
@@ -208,7 +221,7 @@ def auth_callback():
 		response = requests.get('https://api.intra.42.fr/v2/me', headers={'Authorization': f'Bearer {access_token}'}).json()
 		payload = {"userId": response['login'], "image": response['image']['versions']['small']}
 		session['user_info'] = payload
-		client.login_username(response['login'])
+		client.login_username(response['login'], response['image']['versions']['small'])
 		return payload, 200
 	else:
 		return 'Token exchange failed', 400

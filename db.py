@@ -7,12 +7,12 @@ class	UserDB:
 		self.db = self.client.users_db.users
 		self.rooms = self.client.rooms.room
 
-	def	login_username(self, username):
+	def	login_username(self, username, image):
 		user = self.db.find_one({"username": username})
 		if not user:
-			self.add_user(username=username)
+			self.add_user(username=username, image=image)
 
-	def	add_user(self, username):
+	def	add_user(self, username, image):
 		self.db.insert_one({
 			"username": username,
 			"stats": {
@@ -21,7 +21,8 @@ class	UserDB:
 				"wins": 0,
 				"losses": 0
 			},
-			"room": None
+			"room": None,
+			"image": image
 		})
 
 	def create_room(self, room_creator, room_code):
@@ -63,8 +64,8 @@ class	UserDB:
 		result = self.rooms.update_one({"room_code": room_code}, update)
 		return result.modified_count
 
+import bisect
 if __name__=='__main__':
 	with open('API_DONT_PUSH.json', 'r') as file:
 		api = json.load(file)
 	client = UserDB(api[0]['connection_string'])
-	client.update_user('ADMIN', {'$set': {'room': None}})
