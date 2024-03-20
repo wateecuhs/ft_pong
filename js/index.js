@@ -40,6 +40,7 @@ socket.on("game_ended", function() {
 	resetMatch();
 	updateStats(userId);
 	document.getElementById('leave-button').style.display = 'none';
+	renderLeaderboard();
 })
 
 async function	get_room(roomCode){
@@ -246,6 +247,7 @@ function	player1Win(){
 			resetMatch();
 			updateStats(userId);
 			document.getElementById('leave-button').style.display = 'none';
+			renderLeaderboard();
 		});
 	})
 	.catch(error => {
@@ -262,6 +264,7 @@ function	player2Win(){
 			resetMatch();
 			updateStats(userId);
 			document.getElementById('leave-button').style.display = 'none';
+			renderLeaderboard();
 		});
 	})
 	.catch(error => {
