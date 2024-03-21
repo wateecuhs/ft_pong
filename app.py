@@ -174,7 +174,7 @@ def updateElo(winner, loser):
 	E2 = 1 / (1 + 10 ** ((R1 - R2) / 400))
 	R1 = R1 + k * (1 - E1)
 	R2 = R2 + k * (0 - E2)
-	return (int(R1), int(R2))
+	return (round(R1), round(R2))
 
 @app.route("/get_leaderboard")
 def get_leaderboard():
@@ -264,4 +264,4 @@ def serve_file(filename):
 	return send_from_directory('.', filename)
 
 if __name__ == "__main__":
-	socketio.run(app, host='0.0.0.0')
+	socketio.run(app, host='0.0.0.0',  port=5000)

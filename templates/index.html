@@ -21,7 +21,7 @@
 		</div>
 	</div>
 	<div id="canva" class="canva">
-		<div id="match-container">
+		<div id="match-container" class="container">
 			<h1 id="stats-h1" class="text">ROOM</h1>
 			<input id="roomcode" class="room-input" type="text" placeholder="ROOM CODE">
 			<button id="createRoom" class="button" onclick="createRoom()">CREATE ROOM</button>
@@ -44,7 +44,7 @@
 			</form>
 			</div>
 		</div>
-		<div id="leaderboard-container">
+		<div id="leaderboard-container" class="container">
 			<h1 id="leaderboard-h1" class="text">LEADERBOARD</h1>
 			<table class="leaderboard" id="leaderboard">
 				<tr class="leaderboard-row">
@@ -54,12 +54,26 @@
 				</tr>
 			</table>
 		</div>
-		<div id="stats-container">
+		<div id="stats-container" class="container">
 			<h1 id="stats-h1" class="text">STATS</h1>
 			<h3 id="elo-display" class="text stats-display">ELO :</h3>
 			<h3 id="games-display" class="text stats-display">GAMES PLAYED :</h3>
 			<h3 id="wins-display" class="text stats-display">WINS :</h3>
 			<h3 id="losses-display" class="text stats-display">LOSSES :</h3>
+		</div>
+		<div id="invites-container" class="container">
+			<h1 id="stats-h1" class="text">INVITES</h1>
+			<div class="invites-grid">
+				<div class="invite">
+					test1
+				</div>
+				<div class="invite">
+					test2
+				</div>
+				<div class="invite">
+					test3
+				</div>
+			</div>
 		</div>
 	</div>
 	<script src="js/index.js"></script>
