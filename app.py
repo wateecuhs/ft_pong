@@ -126,6 +126,7 @@ def on_disconnect():
 	user_id = session.get('user_info').get('userId')
 	if user_id in active_users:
 		print(f"{user_id} disconnected.")
+		leave_room(user_id)
 		del active_users[user_id]
 
 def create_room():
@@ -181,7 +182,7 @@ def get_leaderboard():
 	doc = client.db.find()
 	leaderboard = []
 	for user in doc:
-		if len(leaderboard) < 10 or leaderboard[9]['elo'] < user['stats']['elo']:
+		if (len(leaderboard) < 10 or leaderboard[9]['elo'] < user['stats']['elo']) and user['stats']['games'] > 0:
 			bisect.insort(leaderboard, {"username": user['username'], "elo": user['stats']['elo'], "image": user['image']}, key=lambda x: -1 * x["elo"])
 	return leaderboard[:5], 200
 
@@ -197,17 +198,12 @@ def start_game():
 @app.route('/auth/42/callback', methods=['POST'])
 def auth_callback():
 	code = request.args.get('code')
-	# if code == 'ADMIN':
-	# 	payload = {"userId": 'ADMIN', "image": 'https://cdn.intra.42.fr/users/e3f8a534b7223eb50fedd0d41dcbd75f/small_panger.jpg'}
-	# 	session['user_info'] = payload
-	# 	client.login_username('ADMIN', image="https://cdn.intra.42.fr/users/e3f8a534b7223eb50fedd0d41dcbd75f/small_panger.jpg")
-	# 	return payload, 200
 	token_url = 'https://api.intra.42.fr/oauth/token'
 	with open('API_DONT_PUSH.json', 'r') as file:
 		api = json.load(file)
 	client_id = api[0]['client_id']
 	client_secret = api[0]['client_secret']
-	redirect_uri = 'http://127.0.0.1:5000/confirm_token'
+	redirect_uri = 'http://localhost:5000/confirm_token'
 	params = {
 		'grant_type': 'authorization_code',
 		'client_id': client_id,
@@ -224,7 +220,7 @@ def auth_callback():
 		client.login_username(response['login'], response['image']['versions']['small'])
 		return payload, 200
 	else:
-		return 'Token exchange failed', 400
+		return jsonify({"message": "token exchange failed"}), 400
 
 @app.route('/get_user_info')
 def get_user_info():
@@ -264,4 +260,4 @@ def serve_file(filename):
 	return send_from_directory('.', filename)
 
 if __name__ == "__main__":
-	socketio.run(app, host='0.0.0.0',  port=5000)
+	socketio.run(app, host='0.0.0.0',  port=5000, debug=True)

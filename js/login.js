@@ -12,15 +12,17 @@ function	loginAuth(code){
 		},
 		body: JSON.stringify({code})
 	}).then(response => {
-		console.log("here");
 		if (!response.ok) {
 			throw new Error('Error logging in');
 		}
 		return response.json();
 	}).then(data => {
 		console.log(data);
-		window.location.href = "http://127.0.0.1:5000/home"
+		window.location.href = "http://localhost:5000/home"
 	})
+	.catch(error => {
+		console.error(error);
+	});	
 }
 
 window.onload = function(){

@@ -4,8 +4,6 @@ FROM python:3.12-alpine
 # By default, listen on port 5000
 EXPOSE 5000
 
-ENV FLASK_DEBUG=1
-
 # Set the working directory in the container
 WORKDIR /app
 

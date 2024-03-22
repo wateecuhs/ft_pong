@@ -4,6 +4,7 @@ class User:
 	def __init__(self, user_id):
 		self.user_id = user_id
 		self.rooms = set()
+		join_room(user_id)
 
 	def join_room(self, room):
 		self.rooms.add(room['room_code'])

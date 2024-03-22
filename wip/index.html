@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="styles/navbar.css">
+	<link rel="stylesheet" href="styles/canva.css">
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+	<title>test</title>
+</head>
+<body>
+	<div class="navbar" id="navbar">
+		<div class="nav-left-items">
+			<img src="assets/favicon.ico" class="ping-pong-icon" />
+			<h1 class="ping-pong-title">ft_pong</h1>
+		</div>
+		<div class="nav-right-items">
+			<a class="user-name">panger</a>
+			<img src="https://cdn.intra.42.fr/users/e3f8a534b7223eb50fedd0d41dcbd75f/small_panger.jpg" alt="user-image" class="user-image">
+		</div>
+	</div>
+	<div class="canva">
+		<div class="match-container">
+			<h1 class="container-title">
+				MATCH
+			</h1>
+		</div>
+		<div class="invites-container">
+			<h1 class="container-title">
+				INVITES
+			</h1>
+			<h2 class="void-fill-text">
+				No invites yet.
+			</h2>
+		</div>
+		<div class="leaderboard-container">
+			<h1 class="container-title">
+				LEADERBOARD
+			</h1>
+		</div>
+		<div class="stats-container">
+			<h1 class="container-title">
+				STATS
+			</h1>
+			<h2 class="stats-display">
+				elo :
+			</h2>
+			<h2 class="stats-display">
+				games played:
+			</h2>
+			<h2 class="stats-display">
+				wins :
+			</h2>
+			<h2 class="stats-display">
+				losses :
+			</h2>
+			<div class="match-history-container">
+				<h1 class="container-title">
+					MATCH HISTORY
+				</h1>
+				<h2 class="void-fill-text">
+					No match yet.
+				</h2>
+				<table class="match-history">
+				</table>
+			</div>
+		</div>
+	</div>
+	<script src="js/index.js"></script>
+</body>
