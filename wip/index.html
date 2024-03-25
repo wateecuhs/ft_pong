@@ -7,13 +7,15 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
 	<link rel="stylesheet" href="styles/navbar.css">
 	<link rel="stylesheet" href="styles/canva.css">
+	<link rel="stylesheet" href="styles/elements.css">
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-	<title>test</title>
+	<title>ft-pong Beta</title>
+	<link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
 <body>
 	<div class="navbar" id="navbar">
 		<div class="nav-left-items">
-			<img src="assets/favicon.ico" class="ping-pong-icon" />
+			<img src="assets/ping-pong.png" class="ping-pong-icon" />
 			<h1 class="ping-pong-title">ft_pong</h1>
 		</div>
 		<div class="nav-right-items">
@@ -23,9 +25,55 @@
 	</div>
 	<div class="canva">
 		<div class="match-container">
+			<div class="in-room-blocker hidden" id="in-room-blocker">
+				<input class="input" id="blocker-code" readonly onclick="copyCode()">
+				<button class="match-button" id="leave-room" onclick="hideRoomTab()">
+					Leave room
+				</button>
+			</div>
 			<h1 class="container-title">
 				MATCH
 			</h1>
+			<button class="match-button" id="create-room" onclick="createRoom()">  
+				Create a room
+			</button>
+			<button class="match-button" id="join-room" onclick="joinRoomDisplay()">
+				Join a room
+			</button>
+			<div class="hidden-room-input hidden" id="hidden-room-input">
+				<input class="input" id="hidden-input" placeholder="Room Code">
+				<button class="match-button" id="enter-room" onclick="joinRoom()">
+					Join
+				</button>
+			</div>
+		</div>
+		<div class="live-match-container hidden" id="live-match-container">
+			<h1 class="container-title" id="room-text">
+				ROOM
+			</h1>
+			<h1 class="player-display" id="player1-display">
+				Waiting...
+			</h1>
+			<h1 class="player-display" id="vs">
+				VS
+			</h1>
+			<h1 class="player-display" id="player2-display">
+				Waiting...
+			</h1>
+			<button class="match-button" id="start-match" onclick="startMatch()">
+				Start the match
+			</button>
+			<div class="winner-votes">
+				<button class="match-button hidden" id="player1-vote"  onclick="player1Vote()">  
+					Player 1
+				</button>
+				<button class="match-button hidden" id="player2-vote" onclick="player2Vote()">
+					Player 2
+				</button>
+				<p class="vote-display hidden" id="player1-vote-count">0/2</p>
+				<p class="vote-display hidden" id="player2-vote-count">0/2</p>
+				<p class="note hidden" id="note">Both players need to agree on a winner</p>
+			</div>
 		</div>
 		<div class="invites-container">
 			<h1 class="container-title">
@@ -69,4 +117,5 @@
 		</div>
 	</div>
 	<script src="js/index.js"></script>
+	<script src="js/displays.js"></script>
 </body>

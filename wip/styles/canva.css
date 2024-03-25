@@ -4,7 +4,7 @@
     width: 20%;
 	height: 100%;
     position: absolute;
-    transition: right 0.5s;
+    transition: right 0.5s ease;
     animation-name: slideRight;
     animation-duration: 2s;
     animation-fill-mode: forwards;
@@ -15,15 +15,39 @@
     background-color: #ffffff;
     overflow: hidden;
     width: 20%;
-	height: 40%;
+	height: 30%;
     position: absolute;
-    transition: right 0.5s;
+    transition: right 0.5s ease;
     animation-name: slideDownMatch;
     animation-duration: 1.5s;
     animation-fill-mode: forwards;
     box-shadow: 0px 0px 15px 5px rgba(0,0,0,0.3);
 	z-index: 80;
 	left: 5%;
+	display: block;
+	border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
+}
+.live-match-container {
+    background-color: #ffffff;
+    overflow: hidden;
+    width: 18%;
+	height: 40%;
+    position: absolute;
+	transition: all 1s ease;
+    animation-fill-mode: forwards;
+    box-shadow: 0px 0px 15px 5px rgba(0,0,0,0.3);
+	z-index: 50;
+	left: 6%;
+	top: 30%;
+	display: block;
+	border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
+	visibility: visible;
+}
+.live-match-container.hidden {
+	top: -10%;
+	visibility: hidden;
 }
 .invites-container {
     background-color: #ffffff;
@@ -31,13 +55,15 @@
     width: 20%;
 	height: 40%;
     position: absolute;
-    transition: right 0.5s;
+    transition: right 0.5s ease;
     animation-name: slideDownMatch;
     animation-duration: 1.5s;
     animation-fill-mode: forwards;
     box-shadow: 0px 0px 15px 5px rgba(0,0,0,0.3);
 	z-index: 80;
 	left: 30%;
+	border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
 }
 .leaderboard-container {
     background-color: #ffffff;
@@ -45,13 +71,15 @@
     width: 20%;
 	height: 70%;
     position: absolute;
-    transition: right 0.5s;
+    transition: right 0.5s ease;
     animation-name: slideDownMatch;
     animation-duration: 1.5s;
     animation-fill-mode: forwards;
     box-shadow: 0px 0px 15px 5px rgba(0,0,0,0.3);
 	z-index: 80;
 	left: 55%;
+	border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
 }
 @keyframes slideDownMatch {
 	from {
@@ -67,9 +95,9 @@
     width: 100%;
 	height: 100%;
     position: absolute;
-    transition: right 0.5s;
-    box-shadow: 0px 0px 15px 5px rgba(0,0,0,0.3);
+    transition: right 0.5s ease;
 	z-index: 60;
+	border-top: 1px solid #464141;
 	top: 50%;
 }
 @keyframes slideRight {
@@ -96,6 +124,25 @@
 	margin-left: 10%;
 	margin-bottom: 5%;
 }
+.player-display {
+	font-size: 1.3em;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+}
+#vs {
+	font-size: 1em;
+
+}
+#player1-display {
+	text-align: left;
+	margin-left: 15%;
+}
+#player2-display {
+	text-align: right;
+	margin-right: 15%;
+}
 .void-fill-text {
 	font-size: 1.5em;
 	flex-direction: column;
@@ -103,6 +150,153 @@
 }
 .canva	{
 	width: 100%;
-	height: 100%;
+	height: calc(100% - 70px);
 	position: relative;
+}
+
+#create-room {
+	left: 30%;
+	transform: translateX(-50%);
+	bottom: 15%;
+}
+#join-room {
+	right: 30%;
+	background-color: #5a4c44;
+	transform: translateX(50%);
+	bottom: 15%;
+}
+#enter-room {
+	right: 30%;
+	background-color: #ffffff;
+	transform: translateX(50%);
+	color: rgb(35, 38, 59);
+}
+#start-match {
+	background-color: #4680ff;
+	color: rgb(255, 255, 255);
+	left: 50%;
+	transform: translateX(-50%);
+	bottom: 10%;
+	transition: all 1s ease;
+    animation-fill-mode: forwards;
+}
+#start-match.hidden {
+	bottom: -50%;
+}
+#room-text {
+	top: 0;
+	position: relative;
+	transition: all 1s ease;
+    animation-fill-mode: forwards;
+}
+#room-text.hidden {
+	top: -30%;
+}
+.hidden-room-input {
+    background-color: #ffffff;
+    overflow: hidden;
+    width: 100%;
+	height: 30%;
+	border-radius: 5px;
+    position: absolute;
+    transition: all 1s ease;
+    animation-fill-mode: forwards;
+    box-shadow: 0px 0px 15px 5px rgba(0,0,0,0.3);
+	z-index: 30;
+	right: -10%;
+	bottom: 10%;
+	display: flex;
+	justify-content: left; 
+	align-items: center;
+}
+.in-room-blocker {
+	visibility: visible;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	opacity: 100%;
+	background-color: #0000009c;
+	transition: all 0.5s ease;
+    animation-fill-mode: forwards;
+	z-index: 1000;
+	align-items: center;
+	justify-content: center;
+	display: flex;
+	flex-direction: column;
+}
+.in-room-blocker.hidden {
+	visibility: hidden;
+	opacity: 0%;
+}
+#blocker-code {
+	position: relative;
+	margin: 10px;
+	border-radius: 10px;
+}
+#leave-room {
+	position: relative;
+	background-color: #ff0000;
+	opacity: 100%;
+	margin: 10px;
+}
+#leave-room:disabled {
+	background-color: #4f0e0e;
+}
+.hidden-room-input.hidden {
+	right: -120%;
+}
+#hidden-input {
+	position: relative;
+	margin: 2%;
+}
+#player1-vote {
+	left: 30%;
+	transform: translateX(-50%);
+	bottom: 20%;
+	transition: all 1s ease;
+}
+#player2-vote {
+	right: 30%;
+	background-color: #5a4c44;
+	transform: translateX(50%);
+	bottom: 20%;
+	transition: all 1s ease;
+    animation-fill-mode: forwards;
+}
+#player1-vote.hidden {
+	bottom: -50%;
+}
+#player2-vote.hidden {
+	bottom: -50%;
+}
+.vote-display {
+	position: absolute;
+	bottom: 5%;
+	transition: all 1s ease;
+    animation-fill-mode: forwards;
+}
+.vote-display.hidden {
+	bottom: -50%;
+}
+#player1-vote-count {
+	left: 30%;
+	transform: translateX(-50%);
+}
+#player2-vote-count {
+	right: 30%;
+	transform: translateX(50%);
+}
+#note {
+	text-align: center;
+	position: absolute;
+	bottom: 2%;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 100%;
+	margin: 0;
+	transition: all 1s ease;
+    animation-fill-mode: forwards;
+}
+#note.hidden {
+	bottom: -50%;
 }
