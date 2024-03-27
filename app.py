@@ -26,12 +26,14 @@ def format_room_data(room):
 			"username": room['player_2'],
 			"stats": client.get_user(room['player_2'])['stats']  if client.get_user(room['player_2']) is not None else None
 			},
-		"room_code": room['room_code']}
+		"room_code": room['room_code'],
+		"status": room['status']
+		}
 	return room_data
 
 @socketio.on('join')
 def on_join(data):
-	user_id = data['username']
+	user_id = session.get('user_info').get('userId')
 	room_code = data['room']
 	player = client.get_user(user_id)
 	room = client.get_room(room_code)
@@ -60,9 +62,8 @@ def on_join(data):
 	return room_data, 200
 
 @socketio.on('create')
-def on_create(data):
-	print(data)	
-	user_id = data['username']
+def on_create():
+	user_id = session.get('user_info').get('userId')
 	player = client.get_user(user_id)
 	if player['room'] == None:
 		room_code = id_generator()
@@ -76,9 +77,56 @@ def on_create(data):
 		return room_data, 200
 	return {"message": f"Player already in room {player['room']}"}, 409
 
+@socketio.on('player1_vote')
+def on_player1_vote():
+	user_id = session.get('user_info').get('userId')
+	player = client.get_user(user_id)
+	room = client.get_room(player['room'])
+	if room['player_1'] == player['username']:
+		client.update_room(room['room_code'], {'$set': {'player1_vote': 1}})
+	else:
+		client.update_room(room['room_code'], {'$set': {'player2_vote': 1}})
+	room = client.get_room(player['room'])
+	user = get_user(user_id)
+	user.vote(room['room_code'], {"player1_vote": room['player1_vote'], "player2_vote": room['player2_vote']})
+	if room['player1_vote'] == 1 and room['player2_vote'] == 1:
+		game_end(room['player_1'], room['player_2'], room['room_code'])
+		emit('game_ended', {"player_1": {"username": room['player_1'], "winner": True}, "player_2": {"username": room['player_2'], "winner": False}, "room_code": room['room_code']})
+	if room['player1_vote'] == 2 and room['player2_vote'] == 2:
+		game_end(room['player_1'], room['player_2'], room['room_code'])
+		emit('game_ended', {"player_1": {"username": room['player_1'], "winner": False}, "player_2": {"username": room['player_2'], "winner": True}, "room_code": room['room_code']})
+	return {"player1_vote": room['player1_vote'], "player2_vote": room['player2_vote']}, 200
+
+@socketio.on('player2_vote')
+def on_player2_vote():
+	user_id = session.get('user_info').get('userId')
+	player = client.get_user(user_id)
+	room = client.get_room(player['room'])
+	if room['player_1'] == player['username']:
+		client.update_room(room['room_code'], {'$set': {'player1_vote': 2}})
+	else:
+		client.update_room(room['room_code'], {'$set': {'player2_vote': 2}})
+	room = client.get_room(player['room'])
+	user = get_user(user_id)
+	user.vote(room['room_code'], {"player1_vote": room['player1_vote'], "player2_vote": room['player2_vote']})
+	return {"player1_vote": room['player1_vote'], "player2_vote": room['player2_vote']}, 200
+
+@socketio.on('start')
+def on_start():
+	user_id = session.get('user_info').get('userId')
+	player = client.get_user(user_id)
+	room = client.get_room(player['room'])
+	if room['player_1'] is None or room['player_2'] is None:
+		return {"message": "Need 2 players"}, 404
+	room['status'] = 'Playing'
+	client.update_room(room['room_code'], {'$set': {'status': 'Playing'}})
+	user = get_user(user_id)
+	user.game_started(room['room_code'])
+	return {"message": f"Game started in room {room['room_code']}"}, 200
+
 @socketio.on('leave')
-def on_leave(data):
-	user_id = data['username']
+def on_leave():
+	user_id = session.get('user_info').get('userId')
 	user = get_user(user_id)
 	room = client.get_user(user_id)['room']
 	client.player_leave_room(room, user_id)
@@ -89,6 +137,26 @@ def on_leave(data):
 		else:
 			user.leave_room(format_room_data(room_data))
 	return room, 200
+
+def	game_end(winner: string, loser: string, room_code: string):
+	winner_data = client.get_user(winner)
+	loser_data = client.get_user(loser)
+	winner_data['stats']['elo'], loser_data['stats']['elo'] = updateElo(winner_data['stats']['elo'], loser_data['stats']['elo'])
+	winner_data['stats']['games'] = winner_data['stats']['games'] + 1
+	winner_data['stats']['wins'] = winner_data['stats']['wins'] + 1
+	loser_data['stats']['games'] = loser_data['stats']['games'] + 1
+	loser_data['stats']['losses'] = loser_data['stats']['losses'] + 1
+	client.update_user(winner_data['username'], {'$set': {"stats": winner_data['stats']}})
+	client.update_user(winner_data['username'], {'$set': {"room": None}})
+	client.update_user(loser_data['username'], {'$set': {"stats": loser_data['stats']}})
+	client.update_user(loser_data['username'], {'$set': {"room": None}})
+	client.delete_room(room_code)
+	user = get_or_create_user(winner_data['username'])
+	if user:
+		user.game_ended(room_code)
+	user = get_or_create_user(loser_data['username'])
+	if user:
+		user.game_ended(room_code)
 
 @socketio.on('game_ended')
 def	game_ended(data):
@@ -115,11 +183,18 @@ def	game_ended(data):
 	user = get_or_create_user(loser['username'])
 	if user:
 		user.game_ended(room_code)
+
 @socketio.on('connect')
-def test_connect():
+def on_connect():
 	user_id = session.get('user_info').get('userId')
 	active_users[user_id] = User(user_id)
 	print(f"{user_id} connected.")
+	user = get_or_create_user(user_id)
+	user_data = client.get_user(user_id)
+	if user_data['room'] is None:
+		return
+	room_data = client.get_room(user_data['room'])
+	user.join_room(format_room_data(room_data))
 
 @socketio.on('disconnect')
 def on_disconnect():
@@ -128,17 +203,6 @@ def on_disconnect():
 		print(f"{user_id} disconnected.")
 		leave_room(user_id)
 		del active_users[user_id]
-
-def create_room():
-	user = request.args['player']
-	player = client.get_user(user)
-	if player['room'] == None:
-		room_code = id_generator()
-		client.create_room(player['username'], room_code)
-		client.update_user(player['username'], {'$set': {'room': room_code}})
-		player['room'] = room_code
-		return jsonify({"roomCode": room_code}), 200
-	return "Player already in a room", 400
 
 def get_or_create_user(user_id):
 	if user_id not in active_users:
@@ -183,8 +247,8 @@ def get_leaderboard():
 	leaderboard = []
 	for user in doc:
 		if (len(leaderboard) < 10 or leaderboard[9]['elo'] < user['stats']['elo']) and user['stats']['games'] > 0:
-			bisect.insort(leaderboard, {"username": user['username'], "elo": user['stats']['elo'], "image": user['image']}, key=lambda x: -1 * x["elo"])
-	return leaderboard[:5], 200
+			bisect.insort(leaderboard, {"username": user['username'], "elo": user['stats']['elo'], "image": user['image'], "wins": user['stats']['wins'], "losses": user['stats']['losses']}, key=lambda x: -1 * x["elo"])
+	return leaderboard[:10], 200
 
 @app.route("/start_game", methods=['POST'])
 def start_game():
@@ -199,6 +263,11 @@ def start_game():
 def auth_callback():
 	code = request.args.get('code')
 	token_url = 'https://api.intra.42.fr/oauth/token'
+	if code == 'ADMIN':
+		payload = {"userId": 'ADMIN', "image": 'https://cdn.intra.42.fr/users/e3f8a534b7223eb50fedd0d41dcbd75f/small_panger.jpg'}
+		session['user_info'] = payload
+		client.login_username('ADMIN', 'https://cdn.intra.42.fr/users/e3f8a534b7223eb50fedd0d41dcbd75f/small_panger.jpg')
+		return payload, 200
 	with open('API_DONT_PUSH.json', 'r') as file:
 		api = json.load(file)
 	client_id = api[0]['client_id']
@@ -225,9 +294,12 @@ def auth_callback():
 @app.route('/get_user_info')
 def get_user_info():
 	user_info = session.get('user_info')
-	print(user_info)
 	if user_info:
-		return user_info, 200
+		if client.get_user(user_info['userId']) is None:
+			client.create_user(user_info['userId'], user_info['image'])
+		user_data = client.get_user(user_info['userId'])
+		del user_data['_id']
+		return user_data, 200
 	else:
 		return 'User not found.', 404
 

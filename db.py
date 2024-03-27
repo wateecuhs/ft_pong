@@ -30,7 +30,9 @@ class	UserDB:
 			"player_1": room_creator,
 			"room_code": room_code,
 			"player_2": None,
-			"status": "Idle"
+			"status": "Idle",
+			"player1_vote": None,
+			"player2_vote": None
 		})
 
 	def player_leave_room(self, room_code, username):
@@ -69,3 +71,6 @@ if __name__=='__main__':
 	with open('API_DONT_PUSH.json', 'r') as file:
 		api = json.load(file)
 	client = UserDB(api[0]['connection_string'])
+	user = client.get_user('ADMIN')
+	user['room'] = None
+	client.update_user('ADMIN', {'$set': user})
