@@ -147,4 +147,4 @@ window.onload = function () {
 	getUser();
 	renderLeaderboard();
 	setInterval(renderLeaderboard, 60000);
-} 
+}

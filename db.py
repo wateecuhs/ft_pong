@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 import json
+import os
 
 class	UserDB:
 	def __init__(self, connection_string):
@@ -66,11 +67,8 @@ class	UserDB:
 		result = self.rooms.update_one({"room_code": room_code}, update)
 		return result.modified_count
 
-import bisect
 if __name__=='__main__':
-	with open('API_DONT_PUSH.json', 'r') as file:
-		api = json.load(file)
-	client = UserDB(api[0]['connection_string'])
+	client = UserDB(os.environ.get('CONNECTION_URL'))
 	user = client.get_user('ADMIN')
 	user['room'] = None
 	client.update_user('ADMIN', {'$set': user})

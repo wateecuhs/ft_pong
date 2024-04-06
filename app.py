@@ -4,15 +4,15 @@ import string
 import bisect
 import random
 import requests
+import os
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
 from db import UserDB
 from sockets import User
+import logging
 app = Flask(__name__)
 
-with open('API_DONT_PUSH.json', 'r') as file:
-	api = json.load(file)
-app.secret_key = api[0]['flask_secret']
-client = UserDB(api[0]['connection_string'])
+app.secret_key = os.environ.get('FLASK_SECRET')
+client = UserDB(os.environ.get('CONNECTION_STRING'))
 socketio = SocketIO(app)
 active_users = {}
 
@@ -261,6 +261,7 @@ def start_game():
 
 @app.route('/auth/42/callback', methods=['POST'])
 def auth_callback():
+	print("test")
 	code = request.args.get('code')
 	token_url = 'https://api.intra.42.fr/oauth/token'
 	if code == 'ADMIN':
@@ -268,10 +269,8 @@ def auth_callback():
 		session['user_info'] = payload
 		client.login_username('ADMIN', 'https://cdn.intra.42.fr/users/e3f8a534b7223eb50fedd0d41dcbd75f/small_panger.jpg')
 		return payload, 200
-	with open('API_DONT_PUSH.json', 'r') as file:
-		api = json.load(file)
-	client_id = api[0]['client_id']
-	client_secret = api[0]['client_secret']
+	client_id = os.environ.get('CLIENT_ID')
+	client_secret = os.environ.get('CLIENT_SECRET')
 	redirect_uri = 'http://localhost:5000/confirm_token'
 	params = {
 		'grant_type': 'authorization_code',
@@ -281,6 +280,7 @@ def auth_callback():
 		'redirect_uri': redirect_uri
 	}
 	response = requests.post(token_url, data=params)
+	print("hello")
 	if response.ok:
 		access_token = response.json()['access_token']
 		response = requests.get('https://api.intra.42.fr/v2/me', headers={'Authorization': f'Bearer {access_token}'}).json()
@@ -289,7 +289,7 @@ def auth_callback():
 		client.login_username(response['login'], response['image']['versions']['small'])
 		return payload, 200
 	else:
-		return jsonify({"message": "token exchange failed"}), 400
+		return jsonify({"message": response.text}), 400
 
 @app.route('/get_user_info')
 def get_user_info():
@@ -332,4 +332,7 @@ def serve_file(filename):
 	return send_from_directory('.', filename)
 
 if __name__ == "__main__":
+	print("Starting server")
+	app.logger.setLevel(logging.INFO)
 	socketio.run(app, host='0.0.0.0',  port=5000, debug=True)
+	print("Server started")

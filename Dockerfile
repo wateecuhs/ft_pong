@@ -13,8 +13,14 @@ COPY requirements.txt .
 # Install any dependencies
 RUN pip install -r requirements.txt
 
+ENV test=${HOME}
+
 # Copy the content of the local src directory to the working directory
-COPY . .
+COPY ./assets ./assets
+COPY ./js ./js
+COPY ./styles ./styles
+COPY ./templates ./templates
+COPY *.py ./
 
 # Specify the command to run on container start
 CMD [ "python3", "./app.py" ]
