@@ -5,71 +5,128 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
-	<link rel="stylesheet" href="stylesheet.css">
+	<link rel="stylesheet" href="styles/navbar.css">
+	<link rel="stylesheet" href="styles/canva.css">
+	<link rel="stylesheet" href="styles/elements.css">
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+	<title>ft-pong Beta</title>
 	<link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
-	<title>ft_pong</title>
 </head>
 <body>
-	<div class="menu">
-		<div class="title-box">
+	<div class="navbar" id="navbar">
+		<div class="nav-left-items">
 			<img src="assets/ping-pong.png" class="ping-pong-icon" />
 			<h1 class="ping-pong-title">ft_pong</h1>
 		</div>
-		<div class="menu-item" id="menu-item-container">
-			<h1 id="user-id">
-			</h1>
+		<div class="nav-right-items">
+			<a class="user-name" id="username"></a>
+			<img alt="user-image" class="user-image" id="profile-pic">
 		</div>
 	</div>
-	<div id="canva" class="canva">
-		<div id="match-container" class="container">
-			<h1 id="stats-h1" class="text">ROOM</h1>
-			<input id="roomcode" class="room-input" type="text" placeholder="ROOM CODE">
-			<button id="createRoom" class="button" onclick="createRoom()">CREATE ROOM</button>
-			<button id="copyRoomCode" class="button" onclick="copyRoomCode()">COPY CODE</button>
-			<button id="copyRoomCode2" class="button" onclick="copyRoomCode()">COPY CODE</button>
-			<button id="joinRoom" class="button" onclick="joinRoom()">JOIN ROOM</button>
-			<p id="room_errors" class="text"></p>
-			<p id="player1_name" class="player_names"></p>
-			<p id="player2_name" class="player_names"></p>
-			<button id="leave-button" onclick="leaveRoom()">LEAVE ROOM</button>
-			<button id="open-button" class="open-button" onclick="openForm()">START MATCH</button>
-			<div class="form-popup" id="myForm">
-			<form class="form-container">
-				<h1 >ONGOING MATCH</h1>
-				<h3 >WHO WON ?</h3>
-				<div class="winner-box">
-					<button id="player1-win" type="button" class="btn">PLAYER 1</button>
-					<button id="player2-win" type="button" class="btn player2">PLAYER 2</button>
-				</div>
-			</form>
+	<div class="canva">
+		<div class="match-container">
+			<div class="in-room-blocker hidden" id="in-room-blocker">
+				<input class="input" id="blocker-code" readonly onclick="copyCode()">
+				<button class="match-button" id="leave-room" onclick="leaveRoom()">
+					Leave room
+				</button>
+			</div>
+			<h1 class="container-title">
+				MATCH
+			</h1>
+			<h1 id="errors">
+			</h1>
+			<button class="match-button" id="create-room" onclick="createRoom()">  
+				Create a room
+			</button>
+			<button class="match-button" id="join-room" onclick="joinRoomDisplay()">
+				Join a room
+			</button>
+			<div class="hidden-room-input hidden" id="hidden-room-input">
+				<input class="input" id="hidden-input" placeholder="Room Code">
+				<button class="match-button" id="enter-room" onclick="joinRoom()">
+					Join
+				</button>
 			</div>
 		</div>
-		<div id="leaderboard-container" class="container">
-			<h1 id="leaderboard-h1" class="text">LEADERBOARD</h1>
-			<table class="leaderboard" id="leaderboard">
-				<tr class="leaderboard-row">
-					<td style="font-size: larger;"></td>
-					<td style="font-size: larger;">NAME</td>
-					<td style="font-size: larger;">ELO</td>
-				</tr>
-			</table>
+		<div class="live-match-container hidden" id="live-match-container">
+			<h1 class="container-title" id="room-text">
+				ROOM
+			</h1>
+			<h1 class="player-display" id="player1-display">
+				Waiting...
+			</h1>
+			<h1 class="player-display" id="vs">
+				VS
+			</h1>
+			<h1 class="player-display" id="player2-display">
+				Waiting...
+			</h1>
+			<button class="match-button" id="start-match" onclick="startMatch()">
+				Start the match
+			</button>
+			<div class="winner-votes">
+				<button class="match-button hidden" id="player1-vote"  onclick="player1Vote()">  
+					Player 1
+				</button>
+				<button class="match-button hidden" id="player2-vote" onclick="player2Vote()">
+					Player 2
+				</button>
+				<p class="vote-display hidden" id="player1-vote-count">0/2</p>
+				<p class="vote-display hidden" id="player2-vote-count">0/2</p>
+				<p class="note hidden" id="note">Both players need to agree on a winner</p>
+			</div>
 		</div>
-		<div id="stats-container" class="container">
-			<h1 id="stats-h1" class="text">STATS</h1>
-			<h3 id="elo-display" class="text stats-display">ELO :</h3>
-			<h3 id="games-display" class="text stats-display">GAMES PLAYED :</h3>
-			<h3 id="wins-display" class="text stats-display">WINS :</h3>
-			<h3 id="losses-display" class="text stats-display">LOSSES :</h3>
+		<div class="invites-container">
+			<h1 class="container-title">
+				INVITES
+			</h1>
+			<h2 class="void-fill-text">
+				No invites yet.
+			</h2>
 		</div>
-		<div id="invites-container" class="container">
-			<h1 id="stats-h1" class="text">INVITES</h1>
-			<div class="invites-grid">
-				<div class="btn">
-					<span class="noselect">user invited you to room xxx</span>
-				  </div>
+		<div class="leaderboard-container">
+			<h1 class="container-title" style="margin-bottom: 5px;">
+				LEADERBOARD
+			</h1>
+			<div class="leaderboard" id="leaderboard">
+				<div class="leaderboard-header">
+					<a class="leaderboard-pics"></a>
+					<h1 class="leaderboard-stats-header username">Player</h1>
+					<h1 class="leaderboard-stats-header elo">Elo</h1>
+					<h1 class="leaderboard-stats-header winrate">Winrate</h1>
+				</div>
+			</div>
+		</div>
+		<div class="stats-container">
+			<h1 class="container-title">
+				STATS
+			</h1>
+			<h2 class="stats-display" id="elo-display">
+				elo :
+			</h2>
+			<h2 class="stats-display" id="games-display">
+				games played:
+			</h2>
+			<h2 class="stats-display" id="wins-display">
+				wins :
+			</h2>
+			<h2 class="stats-display" id="losses-display">
+				losses :
+			</h2>
+			<div class="match-history-container">
+				<h1 class="container-title">
+					MATCH HISTORY
+				</h1>
+				<h2 class="void-fill-text">
+					No match yet.
+				</h2>
+				<table class="match-history">
+				</table>
 			</div>
 		</div>
 	</div>
 	<script src="js/index.js"></script>
+	<script src="js/displays.js"></script>
+	<script src="js/sockets.js"></script>
 </body>
-</html>
