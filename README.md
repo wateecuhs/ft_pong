@@ -11,6 +11,9 @@ I planned on doing tournaments and a proper matchmaking not just private rooms w
 
 ## Previews
 
-(Obviously redacting player's infos) 
+(Obviously redacting player's infos)
+
 [preview.webm](https://github.com/user-attachments/assets/cbccd7c0-4ca6-4657-8695-f06e0aae3e0c)
+
+
 [match_preview.webm](https://github.com/user-attachments/assets/4ef5e501-3ccf-43ed-8007-59eca471299d)
